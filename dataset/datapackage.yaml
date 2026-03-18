@@ -21,7 +21,7 @@ resources:
         - name: pessoal_ativo
           type: number
 
-        - name: vencimentos_vantagens_e_outras_despesas_variaveis
+        - name: vencimentos_vantagens_e_outras
           type: number
 
         - name: obrigacoes_patronais
@@ -36,7 +36,7 @@ resources:
         - name: pensoes
           type: number
 
-        - name: outras_despesas_de_pessoal_decorrentes_de_contratos_de_terceirizacao_ou_de_contratacao_de_forma_indireta_SS_1o_do_art_18_da_lrf
+        - name: outras_despesas_terceirizacao
           type: number
 
         - name: desp_pessoal_nao_exec
