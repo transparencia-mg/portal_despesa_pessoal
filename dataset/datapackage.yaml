@@ -1,0 +1,91 @@
+name: portal_despesa_pessoal
+owner_org: ''
+profile: data-package
+resources:
+  - description: Insira a descrição/explicação detalhada deste recurso.
+    dialect:
+      delimiter: ;
+    encoding: utf-8-sig
+    format: csv
+    hashing: md5
+    name: despesa_pessoal_mensal
+    path: data/despesa_pessoal_mensal.csv
+    profile: tabular-data-resource
+    schema:
+      fields:
+        - name: mes_ano
+          type: string
+        - name: despesa_bruta_com_pessoal_i
+          type: string
+        - name: pessoal_ativo
+          type: string
+        - name: vencimentos_vantagens_e_outras_despesas_variaveis
+          type: string
+        - name: obrigacoes_patronais
+          type: string
+        - name: pessoal_inativo_e_pensionistas
+          type: string
+        - name: aposentadorias_reserva_e_reformas
+          type: string
+        - name: pensoes
+          type: string
+        - name: outras_despesas_de_pessoal_decorrentes_de_contratos_de_terceirizacao_ou_de_contratacao_de_forma_indireta_SS_1o_do_art_18_da_lrf
+          type: string
+        - name: desp_pessoal_nao_exec
+          type: string
+        - name: desp_nao_computadas
+          type: string
+        - name: indenizacoes_demissao
+          type: string
+        - name: decisoes_judiciais_ant
+          type: string
+        - name: desp_exercicios_ant
+          type: string
+        - name: inativos_pensionistas_vinc
+          type: string
+        - name: acs_ace_recursos_vinc
+          type: string
+        - name: acs_ace_recursos_vinc_2
+          type: string
+        - name: outras_deducoes
+          type: string
+        - name: despesa_liquida_pessoal
+          type: string
+    scheme: file
+    title: Insira um título humanamente legível para este recurso.
+  - description: Insira a descrição/explicação detalhada deste recurso.
+    dialect:
+      delimiter: ;
+    encoding: utf-8-sig
+    format: csv
+    hashing: md5
+    name: limites_lrf
+    path: data/limites_lrf.csv
+    profile: tabular-data-resource
+    schema:
+      fields:
+        - name: mes_ano_a_mes_ano
+          type: string
+        - name: rcl
+          type: string
+        - name: transf_emendas_individudais
+          type: string
+        - name: transf_emendas_bancada
+          type: string
+        - name: transf_acs_ace
+          type: string
+        - name: outras_deducoes_rcl
+          type: string
+        - name: rcl_ajustada
+          type: string
+        - name: dtp_rcl
+          type: string
+        - name: limite_maximo
+          type: string
+        - name: limite_prudencial
+          type: string
+        - name: limite_alerta
+          type: string
+    scheme: file
+    title: Insira um título humanamente legível para este recurso.
+title: Portal_despesa_pessoal
