@@ -1,10 +1,9 @@
 {
   "name": "portal_despesa_pessoal",
-  "owner_org": "",
+  "owner_org": "secretaria-de-estado-de-fazenda",
   "profile": "data-package",
   "resources": [
     {
-      "description": "Insira a descrição/explicação detalhada deste recurso.",
       "dialect": {
         "delimiter": ";"
       },
@@ -95,10 +94,9 @@
         ]
       },
       "scheme": "file",
-      "title": "Insira um título humanamente legível para este recurso."
+      "title": "Despesa com Pessoal Mensal"
     },
     {
-      "description": "Insira a descrição/explicação detalhada deste recurso.",
       "dialect": {
         "delimiter": ";"
       },
@@ -157,8 +155,8 @@
         ]
       },
       "scheme": "file",
-      "title": "Insira um título humanamente legível para este recurso."
+      "title": "Limites da LRF"
     }
   ],
-  "title": "Portal_despesa_pessoal"
+  "title": "Despesa com Pessoal - MG"
 }
