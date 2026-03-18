@@ -1,9 +1,8 @@
 name: portal_despesa_pessoal
-owner_org: ''
+owner_org: secretaria-de-estado-de-fazenda
 profile: data-package
 resources:
-  - description: Insira a descrição/explicação detalhada deste recurso.
-    dialect:
+  - dialect:
       delimiter: ;
     encoding: utf-8-sig
     format: csv
@@ -52,9 +51,8 @@ resources:
         - name: despesa_liquida_pessoal
           type: string
     scheme: file
-    title: Insira um título humanamente legível para este recurso.
-  - description: Insira a descrição/explicação detalhada deste recurso.
-    dialect:
+    title: Despesa com Pessoal Mensal
+  - dialect:
       delimiter: ;
     encoding: utf-8-sig
     format: csv
@@ -87,5 +85,5 @@ resources:
         - name: limite_alerta
           type: string
     scheme: file
-    title: Insira um título humanamente legível para este recurso.
-title: Portal_despesa_pessoal
+    title: Limites da LRF
+title: Despesa com Pessoal - MG
