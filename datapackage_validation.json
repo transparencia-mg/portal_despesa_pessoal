@@ -1,6 +1,6 @@
 {
   "version": "4.16.6",
-  "time": 0.077,
+  "time": 0.086,
   "errors": [],
   "tasks": [
     {
@@ -97,13 +97,13 @@
         "scheme": "file",
         "title": "Despesa com Pessoal Mensal",
         "stats": {
-          "hash": "6f8daa6a52b451549906731b345f2887",
-          "bytes": 7454,
+          "hash": "47b71825d8d3204eb74dfd7ec525e0bb",
+          "bytes": 7339,
           "fields": 19,
           "rows": 32
         }
       },
-      "time": 0.044,
+      "time": 0.048,
       "scope": [
         "hash-count-error",
         "byte-count-error",
@@ -126,6 +126,126 @@
       ],
       "partial": false,
       "errors": [
+        {
+          "label": "vencimentos_vantagens_e_outras",
+          "fieldName": "vencimentos_vantagens_e_outras_despesas_variaveis",
+          "fieldNumber": 4,
+          "fieldPosition": 4,
+          "labels": [
+            "mes_ano",
+            "despesa_bruta_com_pessoal_i",
+            "pessoal_ativo",
+            "vencimentos_vantagens_e_outras",
+            "obrigacoes_patronais",
+            "pessoal_inativo_e_pensionistas",
+            "aposentadorias_reservas_e_reformas",
+            "pensoes",
+            "outras_despesas_terceirizacoes",
+            "desp_pessoal_nao_exec",
+            "desp_nao_computadas",
+            "indenizacoes_demissao",
+            "decisoes_judiciais_ant",
+            "desp_exercicios_ant",
+            "inativos_pensionistas_vinc",
+            "acs_ace_recursos_vinc",
+            "acs_ace_recursos_vinc_2",
+            "outras_deducoes",
+            "despesa_liquida_pessoal"
+          ],
+          "rowPositions": [
+            1
+          ],
+          "code": "incorrect-label",
+          "name": "Incorrect Label",
+          "tags": [
+            "#table",
+            "#header",
+            "#label"
+          ],
+          "note": "",
+          "message": "Label \"vencimentos_vantagens_e_outras\" in field vencimentos_vantagens_e_outras_despesas_variaveis at position \"4\" does not match the field name in the schema",
+          "description": "One of the data source header does not match the field name defined in the schema."
+        },
+        {
+          "label": "aposentadorias_reservas_e_reformas",
+          "fieldName": "aposentadorias_reserva_e_reformas",
+          "fieldNumber": 7,
+          "fieldPosition": 7,
+          "labels": [
+            "mes_ano",
+            "despesa_bruta_com_pessoal_i",
+            "pessoal_ativo",
+            "vencimentos_vantagens_e_outras",
+            "obrigacoes_patronais",
+            "pessoal_inativo_e_pensionistas",
+            "aposentadorias_reservas_e_reformas",
+            "pensoes",
+            "outras_despesas_terceirizacoes",
+            "desp_pessoal_nao_exec",
+            "desp_nao_computadas",
+            "indenizacoes_demissao",
+            "decisoes_judiciais_ant",
+            "desp_exercicios_ant",
+            "inativos_pensionistas_vinc",
+            "acs_ace_recursos_vinc",
+            "acs_ace_recursos_vinc_2",
+            "outras_deducoes",
+            "despesa_liquida_pessoal"
+          ],
+          "rowPositions": [
+            1
+          ],
+          "code": "incorrect-label",
+          "name": "Incorrect Label",
+          "tags": [
+            "#table",
+            "#header",
+            "#label"
+          ],
+          "note": "",
+          "message": "Label \"aposentadorias_reservas_e_reformas\" in field aposentadorias_reserva_e_reformas at position \"7\" does not match the field name in the schema",
+          "description": "One of the data source header does not match the field name defined in the schema."
+        },
+        {
+          "label": "outras_despesas_terceirizacoes",
+          "fieldName": "outras_despesas_de_pessoal_decorrentes_de_contratos_de_terceirizacao_ou_de_contratacao_de_forma_indireta_SS_1o_do_art_18_da_lrf",
+          "fieldNumber": 9,
+          "fieldPosition": 9,
+          "labels": [
+            "mes_ano",
+            "despesa_bruta_com_pessoal_i",
+            "pessoal_ativo",
+            "vencimentos_vantagens_e_outras",
+            "obrigacoes_patronais",
+            "pessoal_inativo_e_pensionistas",
+            "aposentadorias_reservas_e_reformas",
+            "pensoes",
+            "outras_despesas_terceirizacoes",
+            "desp_pessoal_nao_exec",
+            "desp_nao_computadas",
+            "indenizacoes_demissao",
+            "decisoes_judiciais_ant",
+            "desp_exercicios_ant",
+            "inativos_pensionistas_vinc",
+            "acs_ace_recursos_vinc",
+            "acs_ace_recursos_vinc_2",
+            "outras_deducoes",
+            "despesa_liquida_pessoal"
+          ],
+          "rowPositions": [
+            1
+          ],
+          "code": "incorrect-label",
+          "name": "Incorrect Label",
+          "tags": [
+            "#table",
+            "#header",
+            "#label"
+          ],
+          "note": "",
+          "message": "Label \"outras_despesas_terceirizacoes\" in field outras_despesas_de_pessoal_decorrentes_de_contratos_de_terceirizacao_ou_de_contratacao_de_forma_indireta_SS_1o_do_art_18_da_lrf at position \"9\" does not match the field name in the schema",
+          "description": "One of the data source header does not match the field name defined in the schema."
+        },
         {
           "cell": "4102729301,07",
           "fieldName": "despesa_bruta_com_pessoal_i",
@@ -20954,7 +21074,7 @@
         }
       ],
       "stats": {
-        "errors": 534
+        "errors": 537
       },
       "valid": false
     },
@@ -21026,7 +21146,7 @@
           "rows": 6
         }
       },
-      "time": 0.013,
+      "time": 0.015,
       "scope": [
         "hash-count-error",
         "byte-count-error",
@@ -22917,7 +23037,7 @@
     }
   ],
   "stats": {
-    "errors": 594,
+    "errors": 597,
     "tasks": 2
   },
   "valid": false
