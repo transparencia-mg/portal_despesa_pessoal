@@ -14,42 +14,60 @@ resources:
       fields:
         - name: mes_ano
           type: string
+
         - name: despesa_bruta_com_pessoal_i
-          type: string
+          type: number
+
         - name: pessoal_ativo
-          type: string
+          type: number
+
         - name: vencimentos_vantagens_e_outras_despesas_variaveis
-          type: string
+          type: number
+
         - name: obrigacoes_patronais
-          type: string
+          type: number
+
         - name: pessoal_inativo_e_pensionistas
-          type: string
+          type: number
+
         - name: aposentadorias_reserva_e_reformas
-          type: string
+          type: number
+
         - name: pensoes
-          type: string
+          type: number
+
         - name: outras_despesas_de_pessoal_decorrentes_de_contratos_de_terceirizacao_ou_de_contratacao_de_forma_indireta_SS_1o_do_art_18_da_lrf
-          type: string
+          type: number
+
         - name: desp_pessoal_nao_exec
-          type: string
+          type: number
+
         - name: desp_nao_computadas
-          type: string
+          type: number
+
         - name: indenizacoes_demissao
-          type: string
+          type: number
+
         - name: decisoes_judiciais_ant
-          type: string
+          type: number
+
         - name: desp_exercicios_ant
-          type: string
+          type: number
+
         - name: inativos_pensionistas_vinc
-          type: string
+          type: number
+
         - name: acs_ace_recursos_vinc
-          type: string
+          type: number
+
         - name: acs_ace_recursos_vinc_2
-          type: string
+          type: number
+
         - name: outras_deducoes
-          type: string
+          type: number
+
         - name: despesa_liquida_pessoal
-          type: string
+          type: number
     scheme: file
     title: Despesa com Pessoal Mensal
   - dialect:
@@ -64,26 +82,36 @@ resources:
       fields:
         - name: mes_ano_a_mes_ano
           type: string
+
         - name: rcl
-          type: string
+          type: number
+
         - name: transf_emendas_individudais
-          type: string
+          type: number
+
         - name: transf_emendas_bancada
-          type: string
+          type: number
+
         - name: transf_acs_ace
-          type: string
+          type: number
+
         - name: outras_deducoes_rcl
-          type: string
+          type: number
+
         - name: rcl_ajustada
-          type: string
+          type: number
+
         - name: dtp_rcl
-          type: string
+          type: number
+
         - name: limite_maximo
-          type: string
+          type: number
+
         - name: limite_prudencial
-          type: string
+          type: number
+
         - name: limite_alerta
-          type: string
+          type: number
     scheme: file
     title: Limites da LRF
 title: Despesa com Pessoal - MG
