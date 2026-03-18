@@ -1,0 +1,3342 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>Despesa com Pessoal - Governo de Minas Gerais</title>
+
+    <!-- ==================== ESTILOS E BIBLIOTECAS ==================== -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Bibliotecas para PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+
+    <!-- Chart.js e PapaParse -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+    <style>
+        /* ==================== VARIÁVEIS DE CORES ==================== */
+        :root {
+            --primary-dark: #29435A;
+            --primary-darker: #132837;
+            --accent-red: #B93C42;
+            --accent-bright: #DB233F;
+            --background-light: #EEEFF5;
+            --success-green: #28a745;
+            --warning-yellow: #ffc107;
+            --info-blue: #17a2b8;
+            --chart-purple: #6B5B95;
+            --chart-gray: #6C7A89;
+        }
+
+        /* ==================== RESET E CONFIGURAÇÕES GLOBAIS ==================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            overflow-x: hidden;
+            margin: 0;
+            padding: 0;
+            height: auto;
+            min-height: auto;
+        }
+
+        body { 
+            font-family: 'Montserrat', Segoe UI, Tahoma, Geneva, Verdana, sans-serif; 
+            background-color: var(--background-light); 
+            padding-bottom: 15px; 
+            overflow-x: hidden; 
+            min-height: auto; 
+            height: auto; 
+            position: relative; 
+        } 
+
+        .main-container { 
+            height: auto; 
+            min-height: auto; 
+            overflow: visible; 
+            position: relative; 
+        } 
+
+        .container-fluid {
+            width: 100%;
+            max-width: 100% !important;
+            padding: 0 40px;
+            margin: 0;
+            height: auto;
+            min-height: auto;
+        }
+
+        .dashboard-container {
+            width: 100%;
+            max-width: 100%;
+            padding: 0 40px;
+            margin: 0 auto;
+            height: auto;
+            min-height: auto;
+        }
+
+        .tab-content, 
+        .tab-pane {
+            width: 100%;
+            height: auto;
+            min-height: auto;
+            overflow: visible;
+        }
+
+        .table-container { 
+            height: auto; 
+            min-height: auto; 
+            overflow: visible; 
+            position: relative; 
+        }
+
+        /* ==================== DATA ATUALIZAÇÃO ==================== */
+        .data-atualizacao-container {
+            display: flex;
+            justify-content: left;
+            align-items: center;
+            margin: 15px 0;
+        }
+        
+        .data-atualizacao-box {
+            background: white;
+            border-radius: 8px;
+            padding: 8px 15px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: var(--primary-dark);
+            font-weight: 600;
+        }
+        
+        .data-atualizacao-box i {
+            font-size: 14px;
+            color: var(--accent-red);
+        }
+
+        /* ==================== FILTROS ==================== */
+        .filter-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: none;
+            width: 100%;
+        }
+        
+        .filter-label {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--primary-dark);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .filter-label i { font-size: 18px; color: var(--accent-red); }
+        
+        .form-control, .form-select {
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            padding: 10px 12px;
+            font-size: 13px;
+            transition: all 0.3s ease;
+            height: 42px;
+            width: 100%;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: var(--accent-red);
+            box-shadow: 0 0 0 2px rgba(185, 60, 66, 0.15);
+        }
+
+        /* ==================== AUTOCOMPLETE ==================== */
+        .autocomplete-container {
+            position: relative;
+            width: 100%;
+        }
+        
+        .autocomplete-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            max-height: 250px;
+            overflow-y: auto;
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            display: none;
+        }
+        
+        .autocomplete-suggestions.show {
+            display: block;
+        }
+        
+        .autocomplete-suggestion {
+            padding: 10px 12px;
+            cursor: pointer;
+            font-size: 13px;
+            border-bottom: 1px solid #f1f1f1;
+            transition: background 0.2s;
+        }
+        
+        .autocomplete-suggestion:hover {
+            background-color: var(--background-light);
+            color: var(--accent-red);
+        }
+        
+        .autocomplete-suggestion:last-child {
+            border-bottom: none;
+        }
+        
+        .autocomplete-suggestion strong {
+            color: var(--accent-red);
+            font-weight: 700;
+        }
+
+        /* ==================== CARDS DE MÉTRICAS ==================== */
+        .metric-card {
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e5e9ef;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
+            overflow: hidden;
+            height: 100%;
+        }
+
+        .metric-header {
+            background: var(--primary-dark);
+            color: white;
+            font-size: 18px;
+            font-weight: 600;
+            padding: 10px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .metric-body {
+            padding: 12px 15px;
+        }
+
+        .metric-value {
+            font-size: 26px;
+            font-weight: 600;
+            color: var(--primary-dark);
+        }
+        
+        .metric-change {
+            font-size: 12px;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 15px;
+            display: inline-block;
+        }
+        
+        .metric-change.positive {
+            background-color: rgba(40,167,69,0.1);
+            color: var(--success-green);
+        }
+        
+        .metric-change.warning {
+            background-color: rgba(255,193,7,0.1);
+            color: var(--warning-yellow);
+        }
+
+        /* ==================== CONTAINER DE GRÁFICOS ==================== */
+        .chart-container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
+            margin-bottom: 20px;
+            height: 100%;
+            min-height: 320px;
+        }
+        
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--background-light);
+        }
+        
+        .chart-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--primary-dark);
+            margin: 0;
+        }
+        
+        .chart-wrapper {
+            position: relative;
+            height: 240px;
+            width: 100%;
+        }
+
+        /* ==================== TABELAS ==================== */
+        .table-header {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-darker) 100%);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .table-title {
+            font-size: 15px;
+            font-weight: 600;
+            margin: 0;
+        }
+        
+        .table-badge {
+            background: var(--accent-red);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 15px;
+            font-weight: 600;
+        }
+        
+        .table-fixed-header-container {
+            position: relative;
+            overflow: auto;
+            width: 100%;
+            max-height: 600px;
+        }
+        
+        .table-fixed-header-container table thead th {
+            background-color: var(--primary-dark) !important;
+            color: white !important;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            font-weight: 600;
+            padding: 12px 10px;
+            font-size: 15px;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+        
+        .table {
+            width: 100%;
+            font-size: 15px;
+            border-collapse: separate;
+            border-spacing: 0;
+            table-layout: auto;
+        }
+        
+        .table tbody td {
+            padding: 12px 10px;
+            vertical-align: middle;
+            border-bottom: 1px solid #f1f1f1;
+        }
+        
+        .table tbody tr:hover {
+            background-color: rgba(41, 67, 90, 0.04);
+        }
+
+        .valor-monetario {
+            font-weight: 600;
+            text-align: right;
+            white-space: nowrap;
+        }
+        
+        .valor-positivo {
+            color: var(--success-green);
+        }
+        
+        .valor-negativo {
+            color: var(--accent-red);
+        }
+
+        .orgao-link {
+            color: var(--primary-dark);
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .orgao-link:hover { color: var(--accent-red); text-decoration: underline; }
+
+        /* ==================== SORTABLE HEADERS ==================== */
+        .sortable-header {
+            cursor: pointer;
+            position: relative;
+            padding-right: 25px !important;
+        }
+        
+        .sortable-header:hover {
+            background-color: #2a4a6e !important;
+        }
+        
+        .sortable-header i {
+            font-size: 18px;
+            position: absolute;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            opacity: 0.8;
+        }
+
+        /* ==================== BOTÕES ==================== */
+        .btn-primary-custom, .btn-pesquisa {
+            background: linear-gradient(to right, var(--primary-dark), var(--primary-darker));
+            border: none;
+            padding: 10px 20px;
+            font-weight: 600;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            font-size: 18px;
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            height: 42px;
+            white-space: nowrap;
+        }
+        .btn-primary-custom:hover, .btn-pesquisa:hover {
+            background: linear-gradient(to right, var(--accent-red), #a32c32);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(185, 60, 66, 0.2);
+            color: white;
+        }
+        
+        .btn-secondary-custom {
+            background: white;
+            border: 2px solid var(--primary-darker);
+            color: var(--primary-darker);
+            padding: 10px 20px;
+            font-weight: 600;
+            font-size: 18px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            height: 42px;
+            white-space: nowrap;
+        }
+        .btn-secondary-custom:hover {
+            background-color: var(--primary-darker) !important;
+            color: white !important;
+            border-color: var(--primary-darker) !important;
+        }
+        
+        .btn-export {
+            background: white;
+            border: 2px solid var(--primary-darker);
+            color: var(--primary-darker);
+            padding: 8px 15px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            height: 38px;
+            white-space: nowrap;
+        }
+        .btn-export:hover {
+            background: var(--primary-darker);
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        .btn-action {
+            padding: 6px;
+            border-radius: 4px;
+            border: none;
+            background-color: var(--primary-dark);
+            color: white;
+            width: 32px;
+            height: 32px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .btn-action:hover { background-color: var(--accent-red); }
+
+        /* ==================== BOTÃO COMPARTILHAR ==================== */
+        .share-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .share-options {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            background-color: white;
+            min-width: 200px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+            border-radius: 8px;
+            padding: 8px;
+            z-index: 1000;
+            border: 1px solid #dee2e6;
+            margin-top: 5px;
+        }
+        
+        .share-options.show { display: block; }
+        
+        .share-options a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            color: var(--primary-dark);
+            transition: background 0.2s;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .share-options a:hover { background-color: var(--background-light); color: var(--accent-red); }
+        .share-options a i { font-size: 18px; width: 20px; text-align: center; }
+
+        /* ==================== BUSCA NA TABELA ==================== */
+        .table-search-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .table-search-input {
+            border: 2px solid var(--primary-dark) !important;
+            border-radius: 6px !important;
+            padding: 8px 12px !important;
+            font-size: 13px !important;
+            width: 250px !important;
+            background-color: white;
+            color: var(--primary-dark);
+        }
+        .table-search-input:focus {
+            border-color: var(--accent-red) !important;
+            box-shadow: 0 0 0 2px rgba(185, 60, 66, 0.15);
+            outline: none;
+        }
+
+        /* ==================== NAVEGAÇÃO ==================== */
+        .nav-tabs-container {
+            background: transparent;
+            padding: 10px 0;
+            margin-top: 15px;
+            margin-bottom: 15px;
+            width: 100%;
+        }
+        
+        .nav-tabs {
+            border: none !important;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .nav-tabs .nav-link {
+            border: none !important;
+            background: #ffffff !important;
+            border-radius: 10px !important;
+            padding: 8px 18px !important;
+            font-weight: 500;
+            font-size: 18px;
+            color: var(--primary-dark) !important;
+            display: inline-flex !important;
+            align-items: center;
+            gap: 6px;
+            transition: all .25s ease;
+        }
+
+        .nav-tabs .nav-link:hover {
+            background: #e6e9ed !important;
+        }
+
+        .nav-tabs .nav-link.active {
+            background: var(--primary-dark) !important;
+            color: #fff !important;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+
+        .nav-tabs .material-icons {
+            font-size: 18px !important;
+        }
+
+        .container {
+            max-width: 85% !important;
+        }
+
+        /* ==================== MODAL ==================== */
+        .modal-creative .modal-header {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-darker) 100%);
+            color: white !important;
+            padding: 20px 30px;
+            border-bottom: none;
+        }
+
+        .modal-creative .modal-header .modal-title {
+            color: white !important;
+            font-weight: 600;
+            font-size: 1.25rem;
+        }
+
+        .modal-creative .modal-header .modal-title i {
+            color: white !important;
+        }
+
+        .modal-creative .modal-header .btn-close {
+            filter: brightness(0) invert(1);
+            opacity: 1;
+        }
+
+        .modal-creative .modal-header .btn-close:hover {
+            opacity: 0.8;
+        }
+        
+        .info-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            border-left: 4px solid var(--accent-red);
+            margin-bottom: 15px;
+        }
+        .info-card.primary { border-left-color: var(--primary-dark); }
+        .info-label { font-size: 11px; text-transform: uppercase; color: #6c757d; font-weight: 600; margin-bottom: 5px; }
+        .info-value { font-size: 14px; font-weight: 600; color: var(--primary-dark); word-break: break-word; }
+        .info-value.highlight { font-size: 18px; color: var(--accent-red); }
+
+        /* ==================== PAGINAÇÃO ==================== */
+        .pagination-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: white;
+            border-top: 1px solid #dee2e6;
+            width: 100%;
+        }
+        
+        .pagination-info {
+            font-size: 13px;
+            color: #6c757d;
+        }
+        
+        .pagination .page-link {
+            color: var(--primary-dark);
+            border-color: #dee2e6;
+        }
+        .pagination .page-link:hover {
+            color: var(--accent-red);
+            background-color: #f8f9fa;
+            border-color: #dee2e6;
+        }
+        .pagination .page-item.active .page-link {
+            background-color: var(--primary-dark);
+            border-color: var(--primary-dark);
+            color: white;
+        }
+        
+        .items-per-page {
+            width: 80px;
+            border: 2px solid var(--primary-dark) !important;
+            border-radius: 6px;
+            padding: 5px 10px;
+            font-size: 12px;
+            background-color: white;
+            color: var(--primary-dark);
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* ==================== INDICADOR DE CARREGAMENTO ==================== */
+        .loading-indicator {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--primary-dark);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: none;
+            align-items: center;
+            gap: 10px;
+            z-index: 9999;
+        }
+
+        .loading-indicator.show {
+            display: flex;
+        }
+
+        .spinner-small {
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* ==================== METADADOS ==================== */
+        .metadata-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            border-left: 4px solid var(--info-blue);
+        }
+        
+        .table-bordered {
+            border: 1px solid #dee2e6;
+            width: 100%;
+        }
+        
+        .table-bordered th,
+        .table-bordered td {
+            border: 1px solid #dee2e6;
+            padding: 12px;
+            vertical-align: top;
+        }
+        
+        .table thead th {
+            vertical-align: bottom;
+            border-bottom: 2px solid #dee2e6;
+            background-color: var(--primary-dark) !important;
+            color: white !important;
+            font-weight: 600;
+        }
+        
+        .table tbody tr {
+            background-color: white !important;
+        }
+        
+        .table tbody tr:hover {
+            background-color: #f5f8ff !important;
+            transition: 0.2s;
+        }
+        
+        .table tbody td {
+            background-color: white;
+        }
+        
+        .fw-bold {
+            font-weight: 700;
+        }
+        
+        .mb-3 {
+            margin-bottom: 1rem;
+        }
+        
+        .mt-4 {
+            margin-top: 2rem;
+        }
+        
+        .me-2 {
+            margin-right: 0.5rem;
+        }
+        
+        .material-icons {
+            font-size: 20px;
+            vertical-align: middle;
+        }
+        
+        .table-responsive {
+            display: block;
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        h5 {
+            font-size: 1.25rem;
+            color: var(--primary-dark);
+            border-bottom: 2px solid var(--info-blue);
+            padding-bottom: 10px;
+        }
+
+        .modern-select {
+            border: 1.5px solid #dfe5ec !important;
+            border-radius: 8px !important;
+            padding: 10px 12px !important;
+            font-size: 16px !important;
+            height: 48px !important;       
+            line-height: 1.5 !important;
+            background-color: #fff;
+            transition: all 0.2s ease;
+            width: 100%;
+        }
+        .modern-select:focus {
+            border-color: var(--primary-dark) !important;
+            box-shadow: 0 0 0 2px rgba(26,58,92,0.1);
+        }
+        
+        .tooltip-inner {
+            background-color: #2f3b45 !important;
+            color: #fff;
+            font-size: 13px;
+            padding: 8px 10px;
+            border-radius: 6px;
+            max-width: 250px;
+        }
+
+        .tooltip.bs-tooltip-top .tooltip-arrow::before {
+            border-top-color: #2f3b45 !important;
+        }
+
+        .tooltip.bs-tooltip-bottom .tooltip-arrow::before {
+            border-bottom-color: #2f3b45 !important;
+        }
+
+        .tooltip.bs-tooltip-start .tooltip-arrow::before {
+            border-left-color: #2f3b45 !important;
+        }
+
+        .tooltip.bs-tooltip-end .tooltip-arrow::before {
+            border-right-color: #2f3b45 !important;
+        }    
+        
+        .info-icon {
+            font-size: 18px;
+            color: white;
+            background-color: var(--primary-dark);
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1; 
+        }
+        
+        /* ==================== FILTROS LAYOUT ==================== */
+        .filters-row {
+            display: flex;
+            gap: 15px;
+            width: 100%;
+            flex-wrap: wrap;
+        }
+        
+        .filter-group {
+            flex: 1 1 200px;
+            min-width: 0;
+        }
+        
+        .filter-buttons-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-left: auto;
+        }
+        
+        .botoes-abaixo {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+        }
+
+        /* ==================== CARD DE LIMITE ==================== */
+        .limite-card {
+            text-align: center;
+            padding: 15px;
+            border-radius: 10px;
+            background: white;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+            border: 1px solid #dee2e6;
+            height: 100%;
+        }
+        .limite-card.safe { border-top: 4px solid var(--success-green); }
+        .limite-card.warning { border-top: 4px solid var(--warning-yellow); }
+        .limite-card.danger { border-top: 4px solid var(--accent-red); }
+        .limite-card .porcentagem { font-size: 24px; font-weight: 700; margin: 8px 0; color: var(--primary-dark); }
+        .limite-card .valor { font-size: 20px; font-weight: 700; color: var(--primary-dark); }
+        .limite-card .label { font-size: 12px; color: var(--primary-darker); text-transform: uppercase; }
+        .limite-info { font-size: 11px; color: #6c757d; margin-top: 5px; }
+
+        /* ==================== BARRAS DE PROGRESSO ==================== */
+        .progress-limite {
+            height: 20px;
+            border-radius: 10px;
+            background-color: #e9ecef;
+            overflow: hidden;
+            margin-top: 5px;
+            border: 1px solid #dee2e6;
+        }
+        .progress-bar-limite { height: 100%; transition: width 0.5s ease; }
+        .progress-bar-limite.safe { background-color: var(--success-green); }
+        .progress-bar-limite.warning { background-color: var(--warning-yellow); }
+        .progress-bar-limite.danger { background-color: var(--accent-red); }
+        
+        /* ==================== RESPONSIVIDADE ==================== */
+        @media (max-width: 1200px) {
+            .container-fluid {
+                max-width: 95% !important;
+                padding: 0 15px;
+            }
+        }
+        
+        @media (max-width: 992px) {
+            .dashboard-container {
+                padding: 0 15px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .filters-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .filter-buttons-group {
+                margin-left: 0;
+                width: 100%;
+                justify-content: stretch;
+            }
+            
+            .filter-buttons-group button {
+                flex: 1;
+            }
+            
+            .d-flex.justify-content-between {
+                flex-direction: column;
+                gap: 15px;
+                align-items: flex-start !important;
+            }
+            
+            .d-flex.gap-2 {
+                flex-wrap: wrap;
+            }
+            
+            .table-search-input {
+                width: 100% !important;
+            }
+        }
+
+        .iframe-mode {
+            overflow: visible !important;
+        }
+        
+        .card-download, .card-stats {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            border: 1px solid #dee2e6;
+            text-align: center;
+            transition: all 0.3s ease;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+        }
+
+        .card-download:hover, .card-stats:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.1);
+            border-color: var(--primary-dark);
+        }
+
+        .card-download i.material-icons,
+        .card-stats i.material-icons {
+            font-size: 48px !important;
+            color: var(--primary-dark) !important;
+            margin-bottom: 15px !important;
+        }
+    </style>
+</head>
+<body class="iframe-mode">
+
+<div class="main-container">
+    <div class="container-fluid dashboard-container">          
+        <!-- ==================== MENU DE NAVEGAÇÃO ==================== -->
+        <div class="nav-tabs-container">
+            <ul class="nav nav-tabs" id="dashboardTabs" role="tablist">
+                <li class="nav-item"><button class="nav-link active" id="visao-geral-tab" data-bs-toggle="tab" data-bs-target="#visao-geral"><i class="material-icons">bar_chart</i>Visão Geral</button></li>
+                <li class="nav-item"><button class="nav-link" id="evolucao-tab" data-bs-toggle="tab" data-bs-target="#evolucao"><i class="material-icons">show_chart</i>Evolução Mensal</button></li>
+                <li class="nav-item"><button class="nav-link" id="limites-tab" data-bs-toggle="tab" data-bs-target="#limites"><i class="material-icons">balance</i>Limites LRF</button></li>
+                <li class="nav-item"><button class="nav-link" id="downloads-tab" data-bs-toggle="tab" data-bs-target="#downloads"><i class="material-icons">download</i>Downloads</button></li>
+            </ul>
+        </div>
+
+        <!-- ==================== DATA DE ATUALIZAÇÃO ==================== -->
+        <div class="data-atualizacao-container">
+            <div class="data-atualizacao-box">
+                <i class="material-icons">update</i> Atualizado em: <span id="data-atualizacao-header">Carregando...</span>
+            </div>
+        </div>
+
+        <!-- ==================== CONTEÚDO DAS ABAS ==================== -->
+        <div class="tab-content" id="dashboardTabsContent">
+            <!-- ABA 1: VISÃO GERAL -->
+            <div class="tab-pane fade show active" id="visao-geral" role="tabpanel">
+                <div id="visao-geral-content"></div>
+            </div>
+            <!-- ABA 2: EVOLUÇÃO MENSAL -->
+            <div class="tab-pane fade" id="evolucao" role="tabpanel">
+                <div id="evolucao-content"></div>
+            </div>
+            <!-- ABA 3: LIMITES LRF -->
+            <div class="tab-pane fade" id="limites" role="tabpanel">
+                <div id="limites-content"></div>
+            </div>
+            <!-- ABA 4: DOWNLOADS -->
+            <div class="tab-pane fade" id="downloads" role="tabpanel">
+                <div id="downloads-content"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== INDICADOR DE CARREGAMENTO ==================== -->
+<div class="loading-indicator" id="loadingIndicator">
+    <div class="spinner-small"></div>
+    <span>Carregando dados...</span>
+</div>
+
+<!-- ==================== MODAL DE DETALHES ==================== -->
+<div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content modal-creative">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="material-icons me-2">info</i> Detalhes do Período</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="modalContent"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary-custom" data-bs-dismiss="modal"><i class="material-icons me-2">close</i>Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== LOADING OVERLAY ==================== -->
+<div class="loading-overlay" id="loadingOverlay" style="display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.9); z-index:9999; justify-content:center; align-items:center;">
+    <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Carregando...</span></div>
+</div>
+
+<!-- ==================== SCRIPTS ==================== -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    // ============================================
+    // CONFIGURAÇÕES E VARIÁVEIS GLOBAIS
+    // ============================================
+    const GITHUB_BASE_URL = 'https://raw.githubusercontent.com/transparencia-mg/despesa-pessoal-mg/main/dataset/data/';
+    
+    // Arquivos CSV atualizados com os novos nomes de colunas
+    const DESPESA_MENSAL_CSV = 'despesa_pessoal_mensal.csv';
+    const LIMITES_LRF_CSV = 'limites_lrf.csv';
+
+    // Mapeamento de meses
+    const monthNames = {
+        '01': 'Janeiro', '02': 'Fevereiro', '03': 'Março',
+        '04': 'Abril', '05': 'Maio', '06': 'Junho',
+        '07': 'Julho', '08': 'Agosto', '09': 'Setembro',
+        '10': 'Outubro', '11': 'Novembro', '12': 'Dezembro'
+    };
+    
+    const mesesAbreviados = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+
+    // Cores dos gráficos
+    const chartColors = {
+        despesaBruta: '#29435A',
+        pessoalAtivo: '#2F5D8A',
+        vencimentos: '#4A7DAA',
+        obrigacoesPatronais: '#2F7A5C',
+        inativosPensionistas: '#6B5B95',
+        despesasNaoComputadas: '#D97A30',
+        despesaLiquida: '#20B2AA',
+        rcl: '#1E5631',
+        limiteLegal: '#B93C42'
+    };
+
+    // Estruturas de dados
+    let despesaMensalData = [];
+    let limitesLRFData = [];
+    let allData = {};
+    let limitesData = {};
+    let charts = {};
+    
+    // Estado atual
+    let currentDisplayData = {
+        ano: '2024',
+        mes: '12',
+        dados: [],
+        metrica: {
+            despesaBruta: 0,
+            pessoalAtivo: 0,
+            inativosPensionistas: 0,
+            despesaLiquida: 0,
+            periodo: 'Dezembro/2024'
+        },
+        periodosDisponiveis: []
+    };
+
+    // Estado para gráfico acumulado
+    let isAccumulated = false;
+    
+    // Estado para ordenação
+    let sortConfig = {
+        coluna: '',
+        direcao: 'asc'
+    };
+
+    // ============================================
+    // FUNÇÕES DE INICIALIZAÇÃO
+    // ============================================
+    document.addEventListener('DOMContentLoaded', function() {
+        setupEventListeners();
+        carregarDadosIniciais();
+        setupAtualizacaoData();
+        
+        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+        tooltipTriggerList.forEach(el => new bootstrap.Tooltip(el));
+        
+        setTimeout(() => {
+            iframeUpdateHeight();
+        }, 500);
+        
+        window.addEventListener('resize', () => {
+            clearTimeout(window.resizeTimer);
+            window.resizeTimer = setTimeout(iframeUpdateHeight, 250);
+        });
+        
+        document.querySelectorAll('[data-bs-toggle="tab"]').forEach(tab => {
+            tab.addEventListener('shown.bs.tab', () => {
+                setTimeout(iframeUpdateHeight, 300);
+            });
+        });
+    });
+
+    function iframeUpdateHeight() {
+        const html = document.documentElement;
+        const body = document.body;
+        
+        const scrollHeight = Math.max(
+            body.scrollHeight,
+            html.scrollHeight,
+            body.offsetHeight,
+            html.offsetHeight,
+            document.querySelector('.main-container')?.scrollHeight || 0
+        );
+        
+        const finalHeight = scrollHeight + 2;
+        
+        try {
+            if (window.parent && window.parent !== window) {
+                window.parent.postMessage({ 
+                    iframeHeight: finalHeight,
+                    height: finalHeight,
+                    type: 'resize'
+                }, '*');
+            }
+        } catch (error) {}
+        
+        return finalHeight;
+    }
+
+    function setupAtualizacaoData() {
+        const now = new Date();
+        const dataFormatada = now.toLocaleDateString('pt-BR') + ' ' + now.toLocaleTimeString('pt-BR');
+        const elementoData = document.getElementById('data-atualizacao-header');
+        if (elementoData) {
+            elementoData.textContent = dataFormatada;
+        }
+    }
+
+    function setupEventListeners() {
+        window.addEventListener('click', (e) => {
+            if (!e.target.closest('.share-dropdown')) {
+                document.querySelectorAll('.share-options').forEach(opt => opt.classList.remove('show'));
+            }
+        });
+    }
+
+    function showLoading(show, message = 'Carregando dados...') {
+        const indicator = document.getElementById('loadingIndicator');
+        if (indicator) {
+            indicator.querySelector('span').textContent = message;
+            if (show) {
+                indicator.classList.add('show');
+            } else {
+                indicator.classList.remove('show');
+            }
+        }
+    }
+
+    function showError(message) {
+        const container = document.querySelector('.main-container');
+        if (!container) return;
+        
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'alert alert-danger alert-dismissible fade show';
+        errorDiv.innerHTML = `
+            <i class="material-icons me-2" style="vertical-align: middle;">warning</i>
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        container.prepend(errorDiv);
+        
+        setTimeout(() => {
+            errorDiv.remove();
+        }, 5000);
+    }
+
+    function showSuccess(message) {
+        const container = document.querySelector('.main-container');
+        if (!container) return;
+        
+        const successDiv = document.createElement('div');
+        successDiv.className = 'alert alert-success alert-dismissible fade show';
+        successDiv.innerHTML = `
+            <i class="material-icons me-2" style="vertical-align: middle;">check_circle</i>
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        container.prepend(successDiv);
+        
+        setTimeout(() => {
+            successDiv.remove();
+        }, 5000);
+    }
+
+    // ============================================
+    // FUNÇÕES UTILITÁRIAS
+    // ============================================
+    function parseNumber(value) {
+        if (!value || value === ' -   ' || value === '-') return 0;
+        
+        // Remove pontos de milhar e substitui vírgula decimal por ponto
+        const strValue = String(value).trim();
+        const cleaned = strValue.replace(/\./g, '').replace(',', '.');
+        const parsed = parseFloat(cleaned);
+        
+        return isNaN(parsed) ? 0 : parsed;
+    }
+
+    function formatCurrency(value, compact = false) {
+        if (isNaN(value) || value === null || value === undefined) return 'R$ 0,00';
+        if (compact && value >= 1e9) return `R$ ${(value / 1e9).toFixed(2).replace('.', ',')} bi`;
+        if (compact && value >= 1e6) return `R$ ${(value / 1e6).toFixed(2).replace('.', ',')} mi`;
+        return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+    }
+
+    function formatPercent(value) {
+        if (isNaN(value)) return '0,00%';
+        return `${value.toFixed(2).replace('.', ',')}%`;
+    }
+
+    function formatarMesAno(mesAno) {
+        if (!mesAno) return '';
+        
+        // Formato esperado: "Jan/24" ou similar
+        const match = String(mesAno).match(/([a-z]{3})\/(\d{2})/i);
+        if (match) {
+            const mesStr = match[1].toLowerCase();
+            const ano = '20' + match[2];
+            const meses = { 'jan':1,'fev':2,'mar':3,'abr':4,'mai':5,'jun':6,'jul':7,'ago':8,'set':9,'out':10,'nov':11,'dez':12 };
+            const mesNum = meses[mesStr] || 1;
+            return `${monthNames[String(mesNum).padStart(2,'0')]}/${ano}`;
+        }
+        
+        return mesAno;
+    }
+
+    function getMonthNumber(mesStr) {
+        const meses = {
+            'jan':1,'fev':2,'mar':3,'abr':4,'mai':5,'jun':6,
+            'jul':7,'ago':8,'set':9,'out':10,'nov':11,'dez':12
+        };
+        return meses[mesStr?.toLowerCase()] || 0;
+    }
+
+    // ============================================
+    // CARREGAMENTO DE DADOS
+    // ============================================
+// ============================================
+// FUNÇÃO PARA INICIALIZAR DADOS (chamar no carregamento)
+// ============================================
+async function carregarDadosIniciais() {
+    console.log('🚀 Carregando dados de despesa com pessoal...');
+    
+    try {
+        // Simular dados para teste (substituir pela chamada real à API)
+        window.despesaMensalData = [
+            { ano: 2024, mes: 1, orgao: 'Secretaria de Saúde', despesa: 1500000, receita_liquida: 5000000, percentual: 30 },
+            { ano: 2024, mes: 2, orgao: 'Secretaria de Saúde', despesa: 1550000, receita_liquida: 5100000, percentual: 30.4 },
+            { ano: 2024, mes: 3, orgao: 'Secretaria de Saúde', despesa: 1520000, receita_liquida: 5050000, percentual: 30.1 }
+        ];
+        
+        console.log(`✅ Carregados ${window.despesaMensalData.length} registros de despesa mensal`);
+        
+        window.anosDisponiveis = [...new Set(window.despesaMensalData.map(item => item.ano))].sort((a, b) => b - a);
+        console.log('Anos disponíveis:', window.anosDisponiveis);
+        
+        window.lrfData = [
+            { periodo: '2024', limite_legal: 60, limite_prudencial: 57, limite_alerta_inferior: 54 },
+            { periodo: '2023', limite_legal: 60, limite_prudencial: 57, limite_alerta_inferior: 54 }
+        ];
+        
+        console.log(`✅ Carregados ${window.lrfData.length} registros de limites LRF`);
+        
+        // Renderizar as abas
+        renderizarVisaoGeral();
+        renderizarConsulta();
+        renderizarDownloads();
+        
+    } catch (erro) {
+        console.error('Erro no carregamento inicial:', erro);
+    }
+}    
+
+async function carregarDadosIniciais() {
+        showLoading(true, 'Carregando dados de despesa com pessoal...');
+        
+        try {
+            console.log('🚀 Carregando dados de despesa com pessoal...');
+            
+            // Carregar despesa mensal
+            const urlDespesa = `${GITHUB_BASE_URL}${DESPESA_MENSAL_CSV}`;
+            
+            const dadosDespesa = await new Promise((resolve) => {
+                Papa.parse(urlDespesa, {
+                    download: true,
+                    header: true,
+                    skipEmptyLines: true,
+                    encoding: 'UTF-8',
+                    delimiter: ";",
+                    complete: function(results) {
+                        resolve(results.data || []);
+                    },
+                    error: function(error) {
+                        console.error('Erro ao carregar despesa mensal:', error);
+                        resolve([]);
+                    }
+                });
+            });
+            
+            console.log(`✅ Carregados ${dadosDespesa.length} registros de despesa mensal`);
+            
+            // Processar dados de despesa mensal
+            despesaMensalData = dadosDespesa.map(row => {
+                // Extrair mês/ano da primeira coluna
+                const primeiraChave = Object.keys(row)[0];
+                const mesAnoRaw = row[primeiraChave] || '';
+                
+                let ano = '', mes = '', mesNum = 0, mesAnoFormatado = mesAnoRaw;
+                const match = mesAnoRaw.match(/([a-z]{3})-(\d{2})/i);
+                
+                if (match) {
+                    const mesStr = match[1].toLowerCase();
+                    const anoSufixo = match[2];
+                    ano = `20${anoSufixo}`;
+                    mesNum = getMonthNumber(mesStr);
+                    mes = mesNum.toString().padStart(2, '0');
+                    mesAnoFormatado = `${mesesAbreviados[mesNum-1]}/${ano}`;
+                }
+                
+                // NOVOS NOMES DE COLUNAS conforme solicitado
+                return {
+                    mes_ano: mesAnoFormatado,
+                    mes_ano_raw: mesAnoRaw,
+                    
+                    // Despesas brutas
+                    despesa_bruta: parseNumber(row.despesa_bruta_com_pessoal_i) || parseNumber(row.despesa_bruta),
+                    pessoal_ativo: parseNumber(row.pessoal_ativo),
+                    vencimentos_vantagens: parseNumber(row.vencimentos_vantagens_e_outras_despesas_variaveis) || parseNumber(row.vencimentos_vantagens),
+                    obrigacoes_patronais: parseNumber(row.obrigacoes_patronais),
+                    inativos_pensionistas: parseNumber(row.pessoal_inativo_e_pensionistas) || parseNumber(row.inativos_pensionistas),
+                    aposentadorias: parseNumber(row.aposentadorias_reserva_e_reformas) || parseNumber(row.aposentadorias),
+                    pensoes: parseNumber(row.pensoes),
+                    
+                    // Despesas não computadas (agregadas)
+                    desp_pessoal_nao_exec: parseNumber(row.desp_pessoal_nao_exec),
+                    desp_nao_computadas: parseNumber(row.despesas_nao_computadas_ii_ss_1o_do_art_19_da_lrf) || parseNumber(row.despesas_nao_computadas),
+                    indenizacoes_demissao: parseNumber(row.indenizacoes_demissao),
+                    decisoes_judiciais_ant: parseNumber(row.decisoes_judiciais_ant),
+                    desp_exercicios_ant: parseNumber(row.desp_exercicios_ant),
+                    inativos_pensionistas_vinc: parseNumber(row.inativos_pensionistas_vinc),
+                    acs_ace_recursos_vinc: parseNumber(row.acs_ace_recursos_vinc),
+                    outras_deducoes: parseNumber(row.outras_deducoes),
+                    
+                    // Despesa líquida
+                    despesa_liquida: parseNumber(row.despesa_liquida_com_pessoal_iii_i_ii) || parseNumber(row.despesa_liquida),
+                    
+                    // Soma total de não computadas
+                    total_nao_computadas: 0, // Será calculado depois
+                    
+                    ANO: ano,
+                    MES: mes,
+                    MES_NUM: mesNum
+                };
+            }).filter(item => item.ANO && item.despesa_bruta > 0);
+            
+            // Calcular total de não computadas
+            despesaMensalData.forEach(item => {
+                item.total_nao_computadas = 
+                    (item.desp_pessoal_nao_exec || 0) +
+                    (item.desp_nao_computadas || 0) +
+                    (item.indenizacoes_demissao || 0) +
+                    (item.decisoes_judiciais_ant || 0) +
+                    (item.desp_exercicios_ant || 0) +
+                    (item.inativos_pensionistas_vinc || 0) +
+                    (item.acs_ace_recursos_vinc || 0) +
+                    (item.outras_deducoes || 0);
+            });
+            
+            // Organizar por ano
+            allData = {};
+            despesaMensalData.forEach(item => {
+                if (!allData[item.ANO]) allData[item.ANO] = [];
+                allData[item.ANO].push(item);
+            });
+            
+            Object.keys(allData).forEach(ano => {
+                allData[ano].sort((a, b) => a.MES_NUM - b.MES_NUM);
+            });
+            
+            console.log('Anos disponíveis:', Object.keys(allData));
+            
+            // Carregar limites LRF
+            const urlLimites = `${GITHUB_BASE_URL}${LIMITES_LRF_CSV}`;
+            
+            const dadosLimites = await new Promise((resolve) => {
+                Papa.parse(urlLimites, {
+                    download: true,
+                    header: true,
+                    skipEmptyLines: true,
+                    encoding: 'UTF-8',
+                    delimiter: ";",
+                    complete: function(results) {
+                        resolve(results.data || []);
+                    },
+                    error: function(error) {
+                        console.error('Erro ao carregar limites LRF:', error);
+                        resolve([]);
+                    }
+                });
+            });
+            
+            console.log(`✅ Carregados ${dadosLimites.length} registros de limites LRF`);
+            
+            // Processar dados de limites com NOVOS NOMES DE COLUNAS
+            limitesLRFData = dadosLimites.map(row => {
+                // Extrair período
+                const periodo = row['mes_ano_a_mes_ano'] || '';
+                
+                // Extrair ano do período (primeiro ano)
+                let ano = '';
+                const matchPeriodo = periodo.match(/(\d{4})/);
+                if (matchPeriodo) {
+                    ano = matchPeriodo[1];
+                }
+                
+                // Valores
+                const rcl = parseNumber(row['receita_corrente_liquida_rcl_iv']);
+                const transf_emendas_individuais = parseNumber(row['transferencias_obrigatorias_da_uniao_relativas_as_emendas_individuais_v_ss_1deg_art_166_da_cf']);
+                const transf_emendas_bancada = parseNumber(row['transferencias_obrigatorias_da_uniao_relativas_as_emendas_de_bancada_art_166_ss_16_da_cf_vi']);
+                const transf_acs_ace = parseNumber(row['transferencias_da_uniao_para_pagamento_de_agentes_comunitarios_de_saude_e_de_combate_as_endemias_cf_art_198_ss_11']);
+                const outras_deducoes_rcl = parseNumber(row['outras_deducoes_constitucionais_ou_legais_aplicaveis_a_rcl']);
+                const rcl_ajustada = parseNumber(row['receita_corrente_liquida_ajustada_para_calculo_dos_limites_da_despesa_com_pessoal_vii_iv_v_vi']);
+                const dtp_rcl = parseNumber(row['despesa_total_com_pessoal_dtp_sobre_a_rcl_vii_iii_a_iii_b']);
+                
+                // Valores das deduções da despesa
+                const desp_pessoal_nao_exec = parseNumber(row['desp_pessoal_nao_exec']);
+                const desp_nao_computadas = parseNumber(row['despesas_nao_computadas_para_fins_de_calculo_do_limite_de_pessoal_art_19_ss_1o_da_lrf']);
+                const indenizacoes_demissao = parseNumber(row['indenizacoes_por_demissao_e_incentivos_a_demissao_voluntaria']);
+                const decisoes_judiciais_ant = parseNumber(row['despesas_decorrentes_de_decisoes_judiciais_de_periodos_anteriores_ao_da_apuracao']);
+                const desp_exercicios_ant = parseNumber(row['despesas_de_exercicios_anteriores_referentes_a_periodos_anteriores_ao_da_apuracao']);
+                const inativos_pensionistas_vinc = parseNumber(row['despesas_com_inativos_e_pensionistas_custeadas_com_recursos_vinculados']);
+                const acs_ace_recursos_vinc = parseNumber(row['despesas_com_agentes_comunitarios_de_saude_e_de_combate_as_endemias_com_recursos_vinculados_cf_art_198_ss_11']);
+                const outras_deducoes = parseNumber(row['outras_deducoes_constitucionais_ou_legais_aplicaveis_a_despesa_com_pessoal']);
+                const despesa_liquida_pessoal = parseNumber(row['despesa_liquida_com_pessoal_calculada_como_i_ii']);
+                
+                // Calcular percentual
+                const percentual_despesa = rcl_ajustada > 0 ? (dtp_rcl / rcl_ajustada) * 100 : 0;
+                
+                return {
+                    periodo: periodo,
+                    ano: ano,
+                    rcl: rcl,
+                    transf_emendas_individuais: transf_emendas_individuais,
+                    transf_emendas_bancada: transf_emendas_bancada,
+                    transf_acs_ace: transf_acs_ace,
+                    outras_deducoes_rcl: outras_deducoes_rcl,
+                    rcl_ajustada: rcl_ajustada,
+                    dtp_rcl: dtp_rcl,
+                    
+                    // Deduções da despesa
+                    desp_pessoal_nao_exec: desp_pessoal_nao_exec,
+                    desp_nao_computadas: desp_nao_computadas,
+                    indenizacoes_demissao: indenizacoes_demissao,
+                    decisoes_judiciais_ant: decisoes_judiciais_ant,
+                    desp_exercicios_ant: desp_exercicios_ant,
+                    inativos_pensionistas_vinc: inativos_pensionistas_vinc,
+                    acs_ace_recursos_vinc: acs_ace_recursos_vinc,
+                    outras_deducoes: outras_deducoes,
+                    despesa_liquida_pessoal: despesa_liquida_pessoal,
+                    
+                    // Limites
+                    limite_maximo: 49.00,
+                    limite_prudencial: 46.55,
+                    limite_alerta: 44.10,
+                    
+                    percentual_despesa: percentual_despesa
+                };
+            }).filter(item => item.periodo);
+            
+            // Organizar limites por período
+            limitesData = {};
+            limitesLRFData.forEach(item => {
+                if (item.periodo) limitesData[item.periodo] = item;
+            });
+            
+            currentDisplayData.periodosDisponiveis = Object.keys(limitesData).sort().reverse();
+            
+            console.log('Períodos LRF disponíveis:', currentDisplayData.periodosDisponiveis);
+            
+            // Definir dados iniciais (último ano/mês disponível)
+            const anos = Object.keys(allData).sort((a, b) => b - a);
+            if (anos.length > 0) {
+                currentDisplayData.ano = anos[0];
+                const dadosAno = allData[currentDisplayData.ano];
+                if (dadosAno && dadosAno.length > 0) {
+                    const ultimoMes = dadosAno[dadosAno.length - 1];
+                    currentDisplayData.mes = ultimoMes.MES;
+                    currentDisplayData.dados = dadosAno;
+                    currentDisplayData.metrica = calcularMetricas(currentDisplayData.dados, currentDisplayData.mes);
+                }
+            }
+            
+            // Renderizar abas
+            renderizarVisaoGeral();
+            renderizarEvolucao();
+            renderizarLimites();
+            renderizarDownloads();
+            
+            setTimeout(iframeUpdateHeight, 300);
+            
+        } catch (erro) {
+            console.error('Erro no carregamento inicial:', erro);
+            showError('Erro ao carregar dados. Tente novamente mais tarde.');
+        } finally {
+            showLoading(false);
+        }
+    }
+
+    function calcularMetricas(dados, mesSelecionado) {
+        if (!dados || dados.length === 0) {
+            return {
+                despesaBruta: 0,
+                pessoalAtivo: 0,
+                inativosPensionistas: 0,
+                despesaLiquida: 0,
+                periodo: 'Sem dados'
+            };
+        }
+        
+        // Se tem mês específico, pegar dados daquele mês
+        if (mesSelecionado) {
+            const mesData = dados.find(item => item.MES === mesSelecionado);
+            if (mesData) {
+                return {
+                    despesaBruta: mesData.despesa_bruta,
+                    pessoalAtivo: mesData.pessoal_ativo,
+                    inativosPensionistas: mesData.inativos_pensionistas,
+                    despesaLiquida: mesData.despesa_liquida,
+                    totalNaoComputadas: mesData.total_nao_computadas,
+                    periodo: `${monthNames[mesSelecionado]}/${currentDisplayData.ano}`
+                };
+            }
+        }
+        
+        // Caso contrário, somar ano todo
+        const totalBruta = dados.reduce((s, i) => s + i.despesa_bruta, 0);
+        const totalAtivo = dados.reduce((s, i) => s + i.pessoal_ativo, 0);
+        const totalInativo = dados.reduce((s, i) => s + i.inativos_pensionistas, 0);
+        const totalLiquida = dados.reduce((s, i) => s + i.despesa_liquida, 0);
+        const totalNaoComputadas = dados.reduce((s, i) => s + i.total_nao_computadas, 0);
+        const meses = dados.length;
+        
+        return {
+            despesaBruta: totalBruta,
+            pessoalAtivo: totalAtivo,
+            inativosPensionistas: totalInativo,
+            despesaLiquida: totalLiquida,
+            totalNaoComputadas: totalNaoComputadas,
+            mediaMensal: totalBruta / meses,
+            periodo: `Acumulado ${currentDisplayData.ano} (${meses} meses)`
+        };
+    }
+
+    // ============================================
+    // RENDERIZAÇÃO VISÃO GERAL
+    // ============================================
+    function renderizarVisaoGeral() {
+        const container = document.getElementById('visao-geral-content');
+        if (!container) return;
+        
+        const anos = Object.keys(allData).sort((a, b) => b - a);
+        const dadosAno = allData[currentDisplayData.ano] || [];
+        const mesesDisponiveis = dadosAno.map(item => ({
+            valor: item.MES,
+            nome: monthNames[item.MES] || item.MES
+        }));
+        
+        const metrica = currentDisplayData.metrica;
+        
+        // Dados para gráficos
+        const dadosDistribuicao = [];
+        const labelsDistribuicao = [];
+        
+        if (currentDisplayData.mes) {
+            const mesData = dadosAno.find(item => item.MES === currentDisplayData.mes);
+            if (mesData) {
+                dadosDistribuicao.push(
+                    mesData.pessoal_ativo,
+                    mesData.inativos_pensionistas,
+                    mesData.total_nao_computadas || 0,
+                    Math.max(0, mesData.despesa_bruta - mesData.pessoal_ativo - mesData.inativos_pensionistas - (mesData.total_nao_computadas || 0))
+                );
+                labelsDistribuicao.push('Pessoal Ativo', 'Inativos/Pensionistas', 'Não Computadas', 'Outras');
+            }
+        } else {
+            const totalBruta = metrica.despesaBruta;
+            dadosDistribuicao.push(
+                metrica.pessoalAtivo,
+                metrica.inativosPensionistas,
+                metrica.totalNaoComputadas || 0,
+                Math.max(0, totalBruta - metrica.pessoalAtivo - metrica.inativosPensionistas - (metrica.totalNaoComputadas || 0))
+            );
+            labelsDistribuicao.push('Pessoal Ativo', 'Inativos/Pensionistas', 'Não Computadas', 'Outras');
+        }
+        
+        // Dados para tabela de composição
+        let dadosTabela = [];
+        if (currentDisplayData.mes) {
+            const mesData = dadosAno.find(item => item.MES === currentDisplayData.mes);
+            if (mesData) {
+                dadosTabela = [
+                    { descricao: 'DESPESA BRUTA COM PESSOAL', valor: mesData.despesa_bruta, percentual: 100 },
+                    { descricao: 'Pessoal Ativo', valor: mesData.pessoal_ativo, percentual: (mesData.pessoal_ativo / mesData.despesa_bruta) * 100, indent: 1 },
+                    { descricao: 'Vencimentos e Vantagens', valor: mesData.vencimentos_vantagens, percentual: (mesData.vencimentos_vantagens / mesData.despesa_bruta) * 100, indent: 2 },
+                    { descricao: 'Obrigações Patronais', valor: mesData.obrigacoes_patronais, percentual: (mesData.obrigacoes_patronais / mesData.despesa_bruta) * 100, indent: 2 },
+                    { descricao: 'Pessoal Inativo e Pensionistas', valor: mesData.inativos_pensionistas, percentual: (mesData.inativos_pensionistas / mesData.despesa_bruta) * 100, indent: 1 },
+                    { descricao: 'Aposentadorias', valor: mesData.aposentadorias, percentual: (mesData.aposentadorias / mesData.despesa_bruta) * 100, indent: 2 },
+                    { descricao: 'Pensões', valor: mesData.pensoes, percentual: (mesData.pensoes / mesData.despesa_bruta) * 100, indent: 2 },
+                    { descricao: 'DESPESAS NÃO COMPUTADAS', valor: mesData.total_nao_computadas, percentual: (mesData.total_nao_computadas / mesData.despesa_bruta) * 100, isNegative: true },
+                    { descricao: 'DESPESA LÍQUIDA COM PESSOAL', valor: mesData.despesa_liquida, percentual: (mesData.despesa_liquida / mesData.despesa_bruta) * 100, isTotal: true }
+                ];
+            }
+        } else {
+            const totalBruta = metrica.despesaBruta;
+            const meses = dadosAno.length;
+            
+            // Totais anuais
+            const totalAtivo = dadosAno.reduce((s, i) => s + i.pessoal_ativo, 0);
+            const totalVencimentos = dadosAno.reduce((s, i) => s + i.vencimentos_vantagens, 0);
+            const totalObrigacoes = dadosAno.reduce((s, i) => s + i.obrigacoes_patronais, 0);
+            const totalInativo = dadosAno.reduce((s, i) => s + i.inativos_pensionistas, 0);
+            const totalAposentadorias = dadosAno.reduce((s, i) => s + i.aposentadorias, 0);
+            const totalPensoes = dadosAno.reduce((s, i) => s + i.pensoes, 0);
+            const totalNaoComputadas = dadosAno.reduce((s, i) => s + i.total_nao_computadas, 0);
+            const totalLiquida = dadosAno.reduce((s, i) => s + i.despesa_liquida, 0);
+            
+            dadosTabela = [
+                { descricao: 'DESPESA BRUTA COM PESSOAL', valor: totalBruta, percentual: 100 },
+                { descricao: 'Pessoal Ativo', valor: totalAtivo, percentual: (totalAtivo / totalBruta) * 100, indent: 1 },
+                { descricao: 'Vencimentos e Vantagens', valor: totalVencimentos, percentual: (totalVencimentos / totalBruta) * 100, indent: 2 },
+                { descricao: 'Obrigações Patronais', valor: totalObrigacoes, percentual: (totalObrigacoes / totalBruta) * 100, indent: 2 },
+                { descricao: 'Pessoal Inativo e Pensionistas', valor: totalInativo, percentual: (totalInativo / totalBruta) * 100, indent: 1 },
+                { descricao: 'Aposentadorias', valor: totalAposentadorias, percentual: (totalAposentadorias / totalBruta) * 100, indent: 2 },
+                { descricao: 'Pensões', valor: totalPensoes, percentual: (totalPensoes / totalBruta) * 100, indent: 2 },
+                { descricao: 'DESPESAS NÃO COMPUTADAS', valor: totalNaoComputadas, percentual: (totalNaoComputadas / totalBruta) * 100, isNegative: true },
+                { descricao: 'DESPESA LÍQUIDA COM PESSOAL', valor: totalLiquida, percentual: (totalLiquida / totalBruta) * 100, isTotal: true }
+            ];
+        }
+        
+        let html = `
+            <div class="filter-container">
+                <div class="filters-row">
+                    <div class="filter-group">
+                        <label class="filter-label"><i class="material-icons">calendar_today</i> ANO</label>
+                        <select class="form-select modern-select" id="filtroAnoVG" onchange="mudarAnoVG()">
+                            ${anos.map(ano => `<option value="${ano}" ${ano === currentDisplayData.ano ? 'selected' : ''}>${ano}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label"><i class="material-icons">date_range</i> PERÍODO</label>
+                        <select class="form-select modern-select" id="filtroPeriodoVG" onchange="mudarPeriodoVG()">
+                            <option value="">Anual (acumulado)</option>
+                            ${mesesDisponiveis.map(m => `<option value="${m.valor}" ${m.valor === currentDisplayData.mes ? 'selected' : ''}>${m.nome}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div class="filter-buttons-group">
+                        <button class="btn-pesquisa" onclick="aplicarFiltrosVG()"><i class="material-icons me-2">refresh</i> Atualizar</button>
+                        <button class="btn-secondary-custom" onclick="limparFiltrosVG()"><i class="material-icons me-2">clear</i> Limpar</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-3 col-6">
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            Despesa Bruta
+                            <i class="material-icons" data-bs-toggle="tooltip" title="Despesa bruta com pessoal">info_outline</i>
+                        </div>
+                        <div class="metric-body">
+                            <div class="metric-value">${formatCurrency(metrica.despesaBruta, true)}</div>
+                            <div class="metric-change positive">${metrica.periodo}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            Pessoal Ativo
+                            <i class="material-icons" data-bs-toggle="tooltip" title="Despesa com pessoal ativo">info_outline</i>
+                        </div>
+                        <div class="metric-body">
+                            <div class="metric-value">${formatCurrency(metrica.pessoalAtivo, true)}</div>
+                            <div class="metric-change positive">${metrica.despesaBruta ? formatPercent((metrica.pessoalAtivo / metrica.despesaBruta) * 100) : '0%'}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            Inativos/Pensionistas
+                            <i class="material-icons" data-bs-toggle="tooltip" title="Despesa com inativos e pensionistas">info_outline</i>
+                        </div>
+                        <div class="metric-body">
+                            <div class="metric-value">${formatCurrency(metrica.inativosPensionistas, true)}</div>
+                            <div class="metric-change warning">${metrica.despesaBruta ? formatPercent((metrica.inativosPensionistas / metrica.despesaBruta) * 100) : '0%'}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            Despesa Líquida
+                            <i class="material-icons" data-bs-toggle="tooltip" title="Despesa líquida com pessoal">info_outline</i>
+                        </div>
+                        <div class="metric-body">
+                            <div class="metric-value">${formatCurrency(metrica.despesaLiquida, true)}</div>
+                            <div class="metric-change positive">${metrica.despesaBruta ? formatPercent((metrica.despesaLiquida / metrica.despesaBruta) * 100) : '0%'}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h4 class="chart-title">Distribuição da Despesa</h4>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="chartDistribuicao"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h4 class="chart-title">Composição do Pessoal Ativo</h4>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="chartAtivoDetalhado"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="d-flex gap-2">
+                    <button class="btn-export" onclick="exportarVisaoGeralCSV()"><i class="material-icons me-2">description</i>CSV</button>
+                    <button class="btn-export" onclick="exportarVisaoGeralPDF()"><i class="material-icons me-2">print</i>PDF</button>
+                    <div class="share-dropdown">
+                        <button class="btn-export" onclick="toggleShare(1)"><i class="material-icons me-2">share</i>Compartilhar</button>
+                        <div class="share-options" id="shareOptions1">
+                            <a href="#" onclick="copiarLink(event,1)"><i class="fas fa-link"></i> Copiar Link</a>
+                            <a href="#" onclick="compartilharFacebook(event,1)"><i class="fab fa-facebook-f"></i> Facebook</a>
+                            <a href="#" onclick="compartilharTwitter(event,1)"><i class="fab fa-twitter"></i> Twitter</a>
+                            <a href="#" onclick="compartilharLinkedIn(event,1)"><i class="fab fa-linkedin-in"></i> LinkedIn</a>
+                            <a href="#" onclick="compartilharWhatsApp(event,1)"><i class="fab fa-whatsapp"></i> WhatsApp</a>
+                        </div>
+                    </div>
+                </div>
+                <span class="table-badge">${dadosTabela.length} itens</span>
+            </div>
+
+            <div class="table-container">
+                <div class="table-fixed-header-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Descrição</th>
+                                <th class="text-end">Valor (R$)</th>
+                                <th class="text-end">% do Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${dadosTabela.map(item => `
+                                <tr class="${item.isTotal ? 'table-total-row fw-bold' : ''}">
+                                    <td style="padding-left: ${(item.indent || 0) * 20 + 12}px; ${item.isNegative ? 'color: var(--accent-red);' : ''}">
+                                        ${item.descricao}
+                                    </td>
+                                    <td class="text-end valor-monetario ${item.isNegative ? 'valor-negativo' : ''}">
+                                        ${formatCurrency(item.valor)}
+                                    </td>
+                                    <td class="text-end ${item.isNegative ? 'valor-negativo' : ''}">
+                                        ${formatPercent(item.percentual)}
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+        
+        container.innerHTML = html;
+        
+        // Renderizar gráficos
+        setTimeout(() => {
+            renderizarGraficoDistribuicao(dadosDistribuicao, labelsDistribuicao);
+            renderizarGraficoAtivoDetalhado();
+            
+            const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+            tooltipTriggerList.forEach(el => new bootstrap.Tooltip(el));
+        }, 100);
+        
+        setTimeout(iframeUpdateHeight, 300);
+    }
+
+    function renderizarGraficoDistribuicao(dados, labels) {
+        const ctx = document.getElementById('chartDistribuicao')?.getContext('2d');
+        if (!ctx) return;
+        
+        if (charts.distribuicao) charts.distribuicao.destroy();
+        
+        charts.distribuicao = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: dados,
+                    backgroundColor: [chartColors.pessoalAtivo, chartColors.inativosPensionistas, chartColors.despesasNaoComputadas, '#6C7A89'],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { padding: 15, usePointStyle: true, font: { size: 10 } } },
+                    tooltip: {
+                        callbacks: {
+                            label: (ctx) => {
+                                const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentual = ((ctx.raw / total) * 100).toFixed(2);
+                                return `${ctx.label}: ${formatCurrency(ctx.raw, true)} (${percentual}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function renderizarGraficoAtivoDetalhado() {
+        const ctx = document.getElementById('chartAtivoDetalhado')?.getContext('2d');
+        if (!ctx) return;
+        
+        const dadosAno = allData[currentDisplayData.ano] || [];
+        let vencimentos = 0, obrigacoes = 0, label = '';
+        
+        if (currentDisplayData.mes) {
+            const mesData = dadosAno.find(item => item.MES === currentDisplayData.mes);
+            if (mesData) {
+                vencimentos = mesData.vencimentos_vantagens;
+                obrigacoes = mesData.obrigacoes_patronais;
+                label = `${monthNames[currentDisplayData.mes]}/${currentDisplayData.ano}`;
+            }
+        } else {
+            vencimentos = dadosAno.reduce((s, i) => s + i.vencimentos_vantagens, 0);
+            obrigacoes = dadosAno.reduce((s, i) => s + i.obrigacoes_patronais, 0);
+            label = `Acumulado ${currentDisplayData.ano}`;
+        }
+        
+        if (charts.ativoDetalhado) charts.ativoDetalhado.destroy();
+        
+        charts.ativoDetalhado = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: [label],
+                datasets: [
+                    { label: 'Vencimentos e Vantagens', data: [vencimentos], backgroundColor: chartColors.vencimentos, borderColor: chartColors.vencimentos, borderWidth: 1 },
+                    { label: 'Obrigações Patronais', data: [obrigacoes], backgroundColor: chartColors.obrigacoesPatronais, borderColor: chartColors.obrigacoesPatronais, borderWidth: 1 }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { callback: (v) => formatCurrency(v, true), font: { size: 10 } }
+                    }
+                },
+                plugins: {
+                    legend: { position: 'bottom', labels: { padding: 15, usePointStyle: true, font: { size: 10 } } },
+                    tooltip: {
+                        callbacks: {
+                            label: (ctx) => `${ctx.dataset.label}: ${formatCurrency(ctx.raw)}`
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    window.mudarAnoVG = function() {
+        const selectAno = document.getElementById('filtroAnoVG');
+        if (selectAno) {
+            currentDisplayData.ano = selectAno.value;
+            currentDisplayData.dados = allData[currentDisplayData.ano] || [];
+            
+            // Atualizar meses disponíveis
+            const selectMes = document.getElementById('filtroPeriodoVG');
+            if (selectMes) {
+                const mesesDisponiveis = currentDisplayData.dados.map(item => ({
+                    valor: item.MES,
+                    nome: monthNames[item.MES] || item.MES
+                }));
+                
+                selectMes.innerHTML = '<option value="">Anual (acumulado)</option>' +
+                    mesesDisponiveis.map(m => `<option value="${m.valor}">${m.nome}</option>`).join('');
+                
+                // Selecionar último mês por padrão
+                if (mesesDisponiveis.length > 0) {
+                    const ultimoMes = mesesDisponiveis[mesesDisponiveis.length - 1].valor;
+                    selectMes.value = ultimoMes;
+                    currentDisplayData.mes = ultimoMes;
+                } else {
+                    currentDisplayData.mes = '';
+                }
+            }
+            
+            aplicarFiltrosVG();
+        }
+    };
+
+    window.mudarPeriodoVG = function() {
+        const selectMes = document.getElementById('filtroPeriodoVG');
+        if (selectMes) {
+            currentDisplayData.mes = selectMes.value || '';
+            aplicarFiltrosVG();
+        }
+    };
+
+    window.aplicarFiltrosVG = function() {
+        const dadosAno = allData[currentDisplayData.ano] || [];
+        currentDisplayData.dados = dadosAno;
+        currentDisplayData.metrica = calcularMetricas(dadosAno, currentDisplayData.mes);
+        renderizarVisaoGeral();
+    };
+
+    window.limparFiltrosVG = function() {
+        // Voltar para o último ano/mês disponível
+        const anos = Object.keys(allData).sort((a, b) => b - a);
+        if (anos.length > 0) {
+            currentDisplayData.ano = anos[0];
+            const dadosAno = allData[currentDisplayData.ano];
+            if (dadosAno && dadosAno.length > 0) {
+                const ultimoMes = dadosAno[dadosAno.length - 1];
+                currentDisplayData.mes = ultimoMes.MES;
+                currentDisplayData.dados = dadosAno;
+            }
+        }
+        
+        // Atualizar selects
+        const selectAno = document.getElementById('filtroAnoVG');
+        if (selectAno) selectAno.value = currentDisplayData.ano;
+        
+        const selectMes = document.getElementById('filtroPeriodoVG');
+        if (selectMes) {
+            const mesesDisponiveis = currentDisplayData.dados.map(item => ({
+                valor: item.MES,
+                nome: monthNames[item.MES] || item.MES
+            }));
+            
+            selectMes.innerHTML = '<option value="">Anual (acumulado)</option>' +
+                mesesDisponiveis.map(m => `<option value="${m.valor}">${m.nome}</option>`).join('');
+            selectMes.value = currentDisplayData.mes;
+        }
+        
+        currentDisplayData.metrica = calcularMetricas(currentDisplayData.dados, currentDisplayData.mes);
+        renderizarVisaoGeral();
+    };
+
+    // ============================================
+    // RENDERIZAÇÃO EVOLUÇÃO MENSAL
+    // ============================================
+    function renderizarEvolucao() {
+        const container = document.getElementById('evolucao-content');
+        if (!container) return;
+        
+        const anos = Object.keys(allData).sort((a, b) => b - a);
+        
+        container.innerHTML = `
+            <div class="filter-container">
+                <div class="filters-row">
+                    <div class="filter-group">
+                        <label class="filter-label"><i class="material-icons">calendar_today</i> ANO</label>
+                        <select class="form-select modern-select" id="filtroAnoEvolucao" onchange="mudarAnoEvolucao()">
+                            ${anos.map(ano => `<option value="${ano}" ${ano === currentDisplayData.ano ? 'selected' : ''}>${ano}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label"><i class="material-icons">show_chart</i> CATEGORIA</label>
+                        <select class="form-select modern-select" id="filtroCategoriaEvolucao" onchange="atualizarGraficoEvolucao()">
+                            <option value="bruta">Despesa Bruta</option>
+                            <option value="liquida">Despesa Líquida</option>
+                            <option value="ativo">Pessoal Ativo</option>
+                            <option value="inativo">Inativos/Pensionistas</option>
+                        </select>
+                    </div>
+                    <div class="filter-buttons-group">
+                        <button class="btn-pesquisa" onclick="atualizarGraficoEvolucao()"><i class="material-icons me-2">refresh</i> Atualizar</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h4 class="chart-title">Evolução Mensal da Despesa</h4>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="toggleAccumulated" onchange="toggleAcumulado()">
+                                <label class="form-check-label" for="toggleAccumulated" style="font-size: 12px;">
+                                    Acumulado
+                                </label>
+                            </div>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="chartEvolucao"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="d-flex gap-2">
+                    <button class="btn-export" onclick="exportarEvolucaoCSV()"><i class="material-icons me-2">description</i>CSV</button>
+                    <button class="btn-export" onclick="exportarEvolucaoPDF()"><i class="material-icons me-2">print</i>PDF</button>
+                    <div class="share-dropdown">
+                        <button class="btn-export" onclick="toggleShare(2)"><i class="material-icons me-2">share</i>Compartilhar</button>
+                        <div class="share-options" id="shareOptions2">
+                            <a href="#" onclick="copiarLink(event,2)"><i class="fas fa-link"></i> Copiar Link</a>
+                            <a href="#" onclick="compartilharFacebook(event,2)"><i class="fab fa-facebook-f"></i> Facebook</a>
+                            <a href="#" onclick="compartilharTwitter(event,2)"><i class="fab fa-twitter"></i> Twitter</a>
+                            <a href="#" onclick="compartilharLinkedIn(event,2)"><i class="fab fa-linkedin-in"></i> LinkedIn</a>
+                            <a href="#" onclick="compartilharWhatsApp(event,2)"><i class="fab fa-whatsapp"></i> WhatsApp</a>
+                        </div>
+                    </div>
+                </div>
+                <span class="table-badge">Evolução mensal</span>
+            </div>
+
+            <div class="table-container">
+                <div class="table-fixed-header-container">
+                    <table class="table" id="tabelaEvolucao">
+                        <thead>
+                            <tr>
+                                <th>Mês</th>
+                                <th class="text-end">Despesa Bruta</th>
+                                <th class="text-end">Despesa Líquida</th>
+                                <th class="text-end">Pessoal Ativo</th>
+                                <th class="text-end">Inativos/Pensionistas</th>
+                                <th class="text-end">Variação %</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaEvolucaoBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+        
+        atualizarGraficoEvolucao();
+        atualizarTabelaEvolucao();
+        
+        setTimeout(iframeUpdateHeight, 300);
+    }
+
+    function atualizarGraficoEvolucao() {
+        const selectCategoria = document.getElementById('filtroCategoriaEvolucao');
+        const categoria = selectCategoria ? selectCategoria.value : 'bruta';
+        
+        const dadosAno = allData[currentDisplayData.ano] || [];
+        if (dadosAno.length === 0) return;
+        
+        let datasetData = [], datasetLabel = '', datasetColor = '';
+        const labels = dadosAno.map(item => `${monthNames[item.MES]}`);
+        
+        switch(categoria) {
+            case 'bruta':
+                datasetData = dadosAno.map(item => item.despesa_bruta);
+                datasetLabel = 'Despesa Bruta';
+                datasetColor = chartColors.despesaBruta;
+                break;
+            case 'liquida':
+                datasetData = dadosAno.map(item => item.despesa_liquida);
+                datasetLabel = 'Despesa Líquida';
+                datasetColor = chartColors.despesaLiquida;
+                break;
+            case 'ativo':
+                datasetData = dadosAno.map(item => item.pessoal_ativo);
+                datasetLabel = 'Pessoal Ativo';
+                datasetColor = chartColors.pessoalAtivo;
+                break;
+            case 'inativo':
+                datasetData = dadosAno.map(item => item.inativos_pensionistas);
+                datasetLabel = 'Inativos/Pensionistas';
+                datasetColor = chartColors.inativosPensionistas;
+                break;
+        }
+        
+        if (isAccumulated) {
+            let acumulado = 0;
+            datasetData = datasetData.map(v => acumulado += v);
+            datasetLabel += ' (Acumulado)';
+        }
+        
+        const ctx = document.getElementById('chartEvolucao')?.getContext('2d');
+        if (!ctx) return;
+        
+        if (charts.evolucao) charts.evolucao.destroy();
+        
+        charts.evolucao = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: datasetLabel,
+                    data: datasetData,
+                    backgroundColor: datasetColor + '20',
+                    borderColor: datasetColor,
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: datasetColor,
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: !isAccumulated,
+                        ticks: { callback: (v) => formatCurrency(v, true), font: { size: 10 } }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: (ctx) => `${ctx.dataset.label}: ${formatCurrency(ctx.raw)}`
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function atualizarTabelaEvolucao() {
+        const tbody = document.getElementById('tabelaEvolucaoBody');
+        if (!tbody) return;
+        
+        const dadosAno = allData[currentDisplayData.ano] || [];
+        if (dadosAno.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Nenhum dado encontrado</td></tr>';
+            return;
+        }
+        
+        let rowsHTML = '';
+        for (let i = 0; i < dadosAno.length; i++) {
+            const item = dadosAno[i];
+            let variacao = '-';
+            if (i > 0 && dadosAno[i-1].despesa_bruta > 0) {
+                const perc = ((item.despesa_bruta - dadosAno[i-1].despesa_bruta) / dadosAno[i-1].despesa_bruta) * 100;
+                variacao = `${perc.toFixed(2).replace('.', ',')}%`;
+            }
+            
+            const variacaoClass = variacao !== '-' && parseFloat(variacao) >= 0 ? 'valor-positivo' : 'valor-negativo';
+            
+            rowsHTML += `<tr>
+                <td>${monthNames[item.MES]}/${item.ANO}</td>
+                <td class="text-end valor-monetario">${formatCurrency(item.despesa_bruta, true)}</td>
+                <td class="text-end valor-monetario">${formatCurrency(item.despesa_liquida, true)}</td>
+                <td class="text-end valor-monetario">${formatCurrency(item.pessoal_ativo, true)}</td>
+                <td class="text-end valor-monetario">${formatCurrency(item.inativos_pensionistas, true)}</td>
+                <td class="text-end ${variacaoClass}">${variacao}</td>
+            </tr>`;
+        }
+        
+        tbody.innerHTML = rowsHTML;
+    }
+
+    window.mudarAnoEvolucao = function() {
+        const selectAno = document.getElementById('filtroAnoEvolucao');
+        if (selectAno) {
+            currentDisplayData.ano = selectAno.value;
+            atualizarGraficoEvolucao();
+            atualizarTabelaEvolucao();
+        }
+    };
+
+    window.toggleAcumulado = function() {
+        const checkbox = document.getElementById('toggleAccumulated');
+        isAccumulated = checkbox ? checkbox.checked : false;
+        atualizarGraficoEvolucao();
+    };
+
+    // ============================================
+    // RENDERIZAÇÃO LIMITES LRF
+    // ============================================
+    function renderizarLimites() {
+        const container = document.getElementById('limites-content');
+        if (!container) return;
+        
+        const periodos = currentDisplayData.periodosDisponiveis;
+        
+        container.innerHTML = `
+            <div class="filter-container">
+                <div class="filters-row">
+                    <div class="filter-group">
+                        <label class="filter-label"><i class="material-icons">date_range</i> PERÍODO DE APURAÇÃO</label>
+                        <select class="form-select modern-select" id="filtroPeriodoLRF" onchange="atualizarLimitesLRF()">
+                            ${periodos.map(p => `<option value="${p}">${p}</option>`).join('')}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="limite-card safe" id="limiteLegalCard">
+                        <div class="label">LIMITE LEGAL</div>
+                        <div class="porcentagem" id="limiteLegalPercentual">49.00%</div>
+                        <div class="valor" id="limiteLegalValor">Carregando...</div>
+                        <div class="limite-info">Máximo permitido (LC 101/2000)</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="limite-card warning" id="limitePrudencialCard">
+                        <div class="label">LIMITE PRUDENCIAL</div>
+                        <div class="porcentagem" id="limitePrudencialPercentual">46.55%</div>
+                        <div class="valor" id="limitePrudencialValor">Carregando...</div>
+                        <div class="limite-info">95% do limite legal</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="limite-card danger" id="limiteAlertaCard">
+                        <div class="label">LIMITE DE ALERTA</div>
+                        <div class="porcentagem" id="limiteAlertaPercentual">44.10%</div>
+                        <div class="valor" id="limiteAlertaValor">Carregando...</div>
+                        <div class="limite-info">90% do limite legal</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h4 class="chart-title">Despesa com Pessoal vs. Receita Corrente Líquida</h4>
+                            <span class="badge" id="despesaAtualPercentual" style="background-color: var(--accent-red); color: white; padding: 6px 12px;">Carregando...</span>
+                        </div>
+                        <div class="p-4">
+                            <div class="progress-limite">
+                                <div class="progress-bar-limite" id="progressBar" style="width: 0%;"></div>
+                            </div>
+                            <div class="limite-info mt-2 d-flex justify-content-between">
+                                <span>0%</span>
+                                <span>Alerta: <span id="limiteAlertaValorLabel">44.10%</span></span>
+                                <span>Prudencial: <span id="limitePrudencialValorLabel">46.55%</span></span>
+                                <span>Legal: <span id="limiteLegalValorLabel">49.00%</span></span>
+                                <span>100%</span>
+                            </div>
+                            
+                            <div class="row mt-4">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="filter-label">Receita Corrente Líquida (RCL)</label>
+                                        <div class="valor-monetario valor-positivo" id="rclTotal" style="font-size: 18px;">Carregando...</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="filter-label">Despesa Total com Pessoal (DTP)</label>
+                                        <div class="valor-monetario" id="despesaExecutada" style="font-size: 18px;">Carregando...</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <div class="table-header">
+                    <span class="table-title">Apuração do Limite Legal - Detalhamento</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table" id="limitesTable">
+                        <thead>
+                            <tr>
+                                <th>Descrição</th>
+                                <th class="text-end">Valor (R$)</th>
+                                <th class="text-end">% da RCL</th>
+                            </tr>
+                        </thead>
+                        <tbody id="limitesTableBody">
+                            <tr><td colspan="3" class="text-center text-muted">Selecione um período para visualizar os dados</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+        
+        // Selecionar primeiro período por padrão
+        if (periodos.length > 0) {
+            const select = document.getElementById('filtroPeriodoLRF');
+            if (select) {
+                select.value = periodos[0];
+                atualizarLimitesLRF();
+            }
+        }
+        
+        setTimeout(iframeUpdateHeight, 300);
+    }
+
+    function atualizarLimitesLRF() {
+        const select = document.getElementById('filtroPeriodoLRF');
+        if (!select) return;
+        
+        const periodo = select.value;
+        const data = limitesData[periodo];
+        if (!data) return;
+        
+        // Atualizar cards de percentuais
+        document.getElementById('limiteLegalPercentual').textContent = `${data.limite_maximo.toFixed(2).replace('.', ',')}%`;
+        document.getElementById('limitePrudencialPercentual').textContent = `${data.limite_prudencial.toFixed(2).replace('.', ',')}%`;
+        document.getElementById('limiteAlertaPercentual').textContent = `${data.limite_alerta.toFixed(2).replace('.', ',')}%`;
+
+        // Atualizar valores em R$ dos limites
+        document.getElementById('limiteLegalValor').textContent = formatCurrency(data.rcl_ajustada * (data.limite_maximo/100), true);
+        document.getElementById('limitePrudencialValor').textContent = formatCurrency(data.rcl_ajustada * (data.limite_prudencial/100), true);
+        document.getElementById('limiteAlertaValor').textContent = formatCurrency(data.rcl_ajustada * (data.limite_alerta/100), true);
+
+        // Atualizar labels na barra de progresso
+        document.getElementById('limiteLegalValorLabel').textContent = `${data.limite_maximo.toFixed(2).replace('.', ',')}%`;
+        document.getElementById('limitePrudencialValorLabel').textContent = `${data.limite_prudencial.toFixed(2).replace('.', ',')}%`;
+        document.getElementById('limiteAlertaValorLabel').textContent = `${data.limite_alerta.toFixed(2).replace('.', ',')}%`;
+
+        // Atualizar barra de progresso
+        const percentual = data.percentual_despesa || 0;
+        const progressBar = document.getElementById('progressBar');
+        progressBar.style.width = `${Math.min(percentual, 100)}%`;
+        document.getElementById('despesaAtualPercentual').textContent = `${percentual.toFixed(2).replace('.', ',')}%`;
+
+        // Atualizar RCL e Despesa
+        document.getElementById('rclTotal').textContent = formatCurrency(data.rcl_ajustada, true);
+        document.getElementById('despesaExecutada').textContent = formatCurrency(data.dtp_rcl, true);
+
+        // Atualizar cor da barra
+        updateProgressBarColor(percentual, data.limite_alerta, data.limite_prudencial, data.limite_maximo);
+
+        // Tabela detalhada
+        const tbody = document.getElementById('limitesTableBody');
+        if (tbody) {
+            tbody.innerHTML = `
+                <tr>
+                    <td><strong>Receita Corrente Líquida (RCL)</strong></td>
+                    <td class="text-end valor-monetario valor-positivo">${formatCurrency(data.rcl)}</td>
+                    <td class="text-end">100.00%</td>
+                </tr>
+                <tr>
+                    <td style="padding-left:20px;">(-) Transferências da União - Emendas Individuais</td>
+                    <td class="text-end valor-monetario valor-negativo">${formatCurrency(data.transf_emendas_individuais)}</td>
+                    <td class="text-end">${data.rcl ? formatPercent((data.transf_emendas_individuais / data.rcl) * 100) : '0,00%'}</td>
+                </tr>
+                <tr>
+                    <td style="padding-left:20px;">(-) Transferências da União - Emendas de Bancada</td>
+                    <td class="text-end valor-monetario valor-negativo">${formatCurrency(data.transf_emendas_bancada)}</td>
+                    <td class="text-end">${data.rcl ? formatPercent((data.transf_emendas_bancada / data.rcl) * 100) : '0,00%'}</td>
+                </tr>
+                <tr>
+                    <td style="padding-left:20px;">(-) Transferências ACS/ACE</td>
+                    <td class="text-end valor-monetario valor-negativo">${formatCurrency(data.transf_acs_ace || 0)}</td>
+                    <td class="text-end">${data.rcl ? formatPercent(((data.transf_acs_ace || 0) / data.rcl) * 100) : '0,00%'}</td>
+                </tr>
+                <tr>
+                    <td style="padding-left:20px;">(-) Outras Deduções da RCL</td>
+                    <td class="text-end valor-monetario valor-negativo">${formatCurrency(data.outras_deducoes_rcl || 0)}</td>
+                    <td class="text-end">${data.rcl ? formatPercent(((data.outras_deducoes_rcl || 0) / data.rcl) * 100) : '0,00%'}</td>
+                </tr>
+                <tr class="table-total-row">
+                    <td><strong>RECEITA CORRENTE LÍQUIDA AJUSTADA</strong></td>
+                    <td class="text-end valor-monetario valor-positivo"><strong>${formatCurrency(data.rcl_ajustada)}</strong></td>
+                    <td class="text-end"><strong>100.00%</strong></td>
+                </tr>
+                <tr>
+                    <td><strong>DESPESA TOTAL COM PESSOAL (DTP)</strong></td>
+                    <td class="text-end valor-monetario"><strong>${formatCurrency(data.dtp_rcl)}</strong></td>
+                    <td class="text-end"><strong>${formatPercent(data.percentual_despesa)}</strong></td>
+                </tr>
+                <tr>
+                    <td style="padding-left:20px;">(-) Despesas não executadas orçamentariamente</td>
+                    <td class="text-end valor-monetario valor-negativo">${formatCurrency(data.desp_pessoal_nao_exec || 0)}</td>
+                    <td class="text-end">${data.rcl_ajustada ? formatPercent(((data.desp_pessoal_nao_exec || 0) / data.rcl_ajustada) * 100) : '0,00%'}</td>
+                </tr>
+                <tr>
+                    <td style="padding-left:20px;">(-) Despesas não computadas (art. 19, §1º LRF)</td>
+                    <td class="text-end valor-monetario valor-negativo">${formatCurrency(data.desp_nao_computadas || 0)}</td>
+                    <td class="text-end">${data.rcl_ajustada ? formatPercent(((data.desp_nao_computadas || 0) / data.rcl_ajustada) * 100) : '0,00%'}</td>
+                </tr>
+                <tr>
+                    <td style="padding-left:20px;">(-) Indenizações por demissão</td>
+                    <td class="text-end valor-monetario valor-negativo">${formatCurrency(data.indenizacoes_demissao || 0)}</td>
+                    <td class="text-end">${data.rcl_ajustada ? formatPercent(((data.indenizacoes_demissao || 0) / data.rcl_ajustada) * 100) : '0,00%'}</td>
+                </tr>
+                <tr>
+                    <td style="padding-left:20px;">(-) Decisões judiciais de períodos anteriores</td>
+                    <td class="text-end valor-monetario valor-negativo">${formatCurrency(data.decisoes_judiciais_ant || 0)}</td>
+                    <td class="text-end">${data.rcl_ajustada ? formatPercent(((data.decisoes_judiciais_ant || 0) / data.rcl_ajustada) * 100) : '0,00%'}</td>
+                </tr>
+                <tr>
+                    <td style="padding-left:20px;">(-) Despesas de exercícios anteriores</td>
+                    <td class="text-end valor-monetario valor-negativo">${formatCurrency(data.desp_exercicios_ant || 0)}</td>
+                    <td class="text-end">${data.rcl_ajustada ? formatPercent(((data.desp_exercicios_ant || 0) / data.rcl_ajustada) * 100) : '0,00%'}</td>
+                </tr>
+                <tr>
+                    <td style="padding-left:20px;">(-) Inativos/pensionistas c/ recursos vinculados</td>
+                    <td class="text-end valor-monetario valor-negativo">${formatCurrency(data.inativos_pensionistas_vinc || 0)}</td>
+                    <td class="text-end">${data.rcl_ajustada ? formatPercent(((data.inativos_pensionistas_vinc || 0) / data.rcl_ajustada) * 100) : '0,00%'}</td>
+                </tr>
+                <tr>
+                    <td style="padding-left:20px;">(-) ACS/ACE c/ recursos vinculados</td>
+                    <td class="text-end valor-monetario valor-negativo">${formatCurrency(data.acs_ace_recursos_vinc || 0)}</td>
+                    <td class="text-end">${data.rcl_ajustada ? formatPercent(((data.acs_ace_recursos_vinc || 0) / data.rcl_ajustada) * 100) : '0,00%'}</td>
+                </tr>
+                <tr>
+                    <td style="padding-left:20px;">(-) Outras deduções</td>
+                    <td class="text-end valor-monetario valor-negativo">${formatCurrency(data.outras_deducoes || 0)}</td>
+                    <td class="text-end">${data.rcl_ajustada ? formatPercent(((data.outras_deducoes || 0) / data.rcl_ajustada) * 100) : '0,00%'}</td>
+                </tr>
+                <tr class="table-total-row">
+                    <td><strong>DESPESA LÍQUIDA COM PESSOAL</strong></td>
+                    <td class="text-end valor-monetario"><strong>${formatCurrency(data.despesa_liquida_pessoal || 0)}</strong></td>
+                    <td class="text-end"><strong>${data.rcl_ajustada ? formatPercent(((data.despesa_liquida_pessoal || 0) / data.rcl_ajustada) * 100) : '0,00%'}</strong></td>
+                </tr>
+                <tr>
+                    <td style="padding-left:20px;">Limite Legal (49.00% da RCL Ajustada)</td>
+                    <td class="text-end valor-monetario valor-positivo">${formatCurrency(data.rcl_ajustada * 0.49)}</td>
+                    <td class="text-end">49.00%</td>
+                </tr>
+                <tr>
+                    <td style="padding-left:20px;">Limite Prudencial (46.55% da RCL Ajustada)</td>
+                    <td class="text-end valor-monetario valor-positivo">${formatCurrency(data.rcl_ajustada * 0.4655)}</td>
+                    <td class="text-end">46.55%</td>
+                </tr>
+                <tr>
+                    <td style="padding-left:20px;">Limite de Alerta (44.10% da RCL Ajustada)</td>
+                    <td class="text-end valor-monetario valor-positivo">${formatCurrency(data.rcl_ajustada * 0.441)}</td>
+                    <td class="text-end">44.10%</td>
+                </tr>
+            `;
+        }
+        
+        setTimeout(iframeUpdateHeight, 100);
+    }
+
+    function updateProgressBarColor(percentual, limiteAlerta, limitePrudencial, limiteMaximo) {
+        const bar = document.getElementById('progressBar');
+        const legalCard = document.getElementById('limiteLegalCard');
+        const prudCard = document.getElementById('limitePrudencialCard');
+        const alertCard = document.getElementById('limiteAlertaCard');
+        
+        if (!bar) return;
+        
+        if (percentual <= limiteAlerta) {
+            bar.className = 'progress-bar-limite safe';
+            if (legalCard) legalCard.className = 'limite-card safe';
+            if (prudCard) prudCard.className = 'limite-card safe';
+            if (alertCard) alertCard.className = 'limite-card safe';
+        } else if (percentual <= limitePrudencial) {
+            bar.className = 'progress-bar-limite warning';
+            if (legalCard) legalCard.className = 'limite-card safe';
+            if (prudCard) prudCard.className = 'limite-card warning';
+            if (alertCard) alertCard.className = 'limite-card warning';
+        } else if (percentual <= limiteMaximo) {
+            bar.className = 'progress-bar-limite danger';
+            if (legalCard) legalCard.className = 'limite-card warning';
+            if (prudCard) prudCard.className = 'limite-card danger';
+            if (alertCard) alertCard.className = 'limite-card danger';
+        } else {
+            bar.className = 'progress-bar-limite danger';
+            if (legalCard) legalCard.className = 'limite-card danger';
+            if (prudCard) prudCard.className = 'limite-card danger';
+            if (alertCard) alertCard.className = 'limite-card danger';
+        }
+    }
+
+// ============================================
+// FUNÇÃO CORRIGIDA - atualizarLimitesLRF
+// ============================================
+window.atualizarLimitesLRF = function() {
+    console.log('Atualizando limites LRF...');
+    
+    const select = document.getElementById('filtroPeriodoLRF');
+    if (!select) return;
+    
+    const periodo = select.value;
+    const data = limitesData[periodo];
+    
+    if (!data) {
+        console.warn('Dados não encontrados para o período:', periodo);
+        return;
+    }
+    
+    console.log('Dados LRF carregados:', data);
+    
+    try {
+        // Atualizar cards de percentuais
+        const limiteLegalEl = document.getElementById('limiteLegalPercentual');
+        const limitePrudencialEl = document.getElementById('limitePrudencialPercentual');
+        const limiteAlertaEl = document.getElementById('limiteAlertaPercentual');
+        
+        if (limiteLegalEl) limiteLegalEl.textContent = `${data.limite_maximo.toFixed(2).replace('.', ',')}%`;
+        if (limitePrudencialEl) limitePrudencialEl.textContent = `${data.limite_prudencial.toFixed(2).replace('.', ',')}%`;
+        if (limiteAlertaEl) limiteAlertaEl.textContent = `${data.limite_alerta.toFixed(2).replace('.', ',')}%`;
+
+        // Atualizar valores em R$ dos limites
+        const limiteLegalValor = document.getElementById('limiteLegalValor');
+        const limitePrudencialValor = document.getElementById('limitePrudencialValor');
+        const limiteAlertaValor = document.getElementById('limiteAlertaValor');
+        
+        if (limiteLegalValor) limiteLegalValor.textContent = formatCurrency(data.rcl_ajustada * (data.limite_maximo/100), true);
+        if (limitePrudencialValor) limitePrudencialValor.textContent = formatCurrency(data.rcl_ajustada * (data.limite_prudencial/100), true);
+        if (limiteAlertaValor) limiteAlertaValor.textContent = formatCurrency(data.rcl_ajustada * (data.limite_alerta/100), true);
+
+        // Atualizar labels na barra de progresso
+        const limiteLegalLabel = document.getElementById('limiteLegalValorLabel');
+        const limitePrudencialLabel = document.getElementById('limitePrudencialValorLabel');
+        const limiteAlertaLabel = document.getElementById('limiteAlertaValorLabel');
+        
+        if (limiteLegalLabel) limiteLegalLabel.textContent = `${data.limite_maximo.toFixed(2).replace('.', ',')}%`;
+        if (limitePrudencialLabel) limitePrudencialLabel.textContent = `${data.limite_prudencial.toFixed(2).replace('.', ',')}%`;
+        if (limiteAlertaLabel) limiteAlertaLabel.textContent = `${data.limite_alerta.toFixed(2).replace('.', ',')}%`;
+
+        // Atualizar barra de progresso
+        const percentual = data.percentual_despesa || 0;
+        const progressBar = document.getElementById('progressBar');
+        const despesaAtualEl = document.getElementById('despesaAtualPercentual');
+        
+        if (progressBar) progressBar.style.width = `${Math.min(percentual, 100)}%`;
+        if (despesaAtualEl) despesaAtualEl.textContent = `${percentual.toFixed(2).replace('.', ',')}% da RCL`;
+
+        // Atualizar RCL e Despesa
+        const rclTotalEl = document.getElementById('rclTotal');
+        const despesaExecutadaEl = document.getElementById('despesaExecutada');
+        
+        if (rclTotalEl) rclTotalEl.textContent = formatCurrency(data.rcl_ajustada, true);
+        if (despesaExecutadaEl) despesaExecutadaEl.textContent = formatCurrency(data.dtp_rcl, true);
+
+        // Atualizar cor da barra
+        updateProgressBarColor(percentual, data.limite_alerta, data.limite_prudencial, data.limite_maximo);
+
+        // Tabela detalhada
+        const tbody = document.getElementById('limitesTableBody');
+        if (tbody) {
+            tbody.innerHTML = `
+                <tr>
+                    <td><strong>Receita Corrente Líquida (RCL)</strong></td>
+                    <td class="text-end valor-monetario valor-positivo">${formatCurrency(data.rcl)}</td>
+                    <td class="text-end">100.00%</td>
+                </tr>
+                <tr>
+                    <td style="padding-left:20px;">(-) Transferências da União - Emendas Individuais</td>
+                    <td class="text-end valor-monetario valor-negativo">${formatCurrency(data.transf_emendas_individuais)}</td>
+                    <td class="text-end">${data.rcl ? formatPercent((data.transf_emendas_individuais / data.rcl) * 100) : '0,00%'}</td>
+                </tr>
+                <tr>
+                    <td style="padding-left:20px;">(-) Transferências da União - Emendas de Bancada</td>
+                    <td class="text-end valor-monetario valor-negativo">${formatCurrency(data.transf_emendas_bancada)}</td>
+                    <td class="text-end">${data.rcl ? formatPercent((data.transf_emendas_bancada / data.rcl) * 100) : '0,00%'}</td>
+                </tr>
+                <tr>
+                    <td style="padding-left:20px;">(-) Transferências ACS/ACE</td>
+                    <td class="text-end valor-monetario valor-negativo">${formatCurrency(data.transf_acs_ace || 0)}</td>
+                    <td class="text-end">${data.rcl ? formatPercent(((data.transf_acs_ace || 0) / data.rcl) * 100) : '0,00%'}</td>
+                </tr>
+                <tr>
+                    <td style="padding-left:20px;">(-) Outras Deduções da RCL</td>
+                    <td class="text-end valor-monetario valor-negativo">${formatCurrency(data.outras_deducoes_rcl || 0)}</td>
+                    <td class="text-end">${data.rcl ? formatPercent(((data.outras_deducoes_rcl || 0) / data.rcl) * 100) : '0,00%'}</td>
+                </tr>
+                <tr class="table-active fw-bold">
+                    <td><strong>RECEITA CORRENTE LÍQUIDA AJUSTADA</strong></td>
+                    <td class="text-end valor-monetario valor-positivo"><strong>${formatCurrency(data.rcl_ajustada)}</strong></td>
+                    <td class="text-end"><strong>100.00%</strong></td>
+                </tr>
+                <tr>
+                    <td><strong>DESPESA TOTAL COM PESSOAL (DTP)</strong></td>
+                    <td class="text-end valor-monetario"><strong>${formatCurrency(data.dtp_rcl)}</strong></td>
+                    <td class="text-end"><strong>${formatPercent(data.percentual_despesa)}</strong></td>
+                </tr>
+                <tr>
+                    <td style="padding-left:20px;">(-) Despesas não executadas orçamentariamente</td>
+                    <td class="text-end valor-monetario valor-negativo">${formatCurrency(data.desp_pessoal_nao_exec || 0)}</td>
+                    <td class="text-end">${data.rcl_ajustada ? formatPercent(((data.desp_pessoal_nao_exec || 0) / data.rcl_ajustada) * 100) : '0,00%'}</td>
+                </tr>
+                <tr>
+                    <td style="padding-left:20px;">(-) Despesas não computadas (art. 19, §1º LRF)</td>
+                    <td class="text-end valor-monetario valor-negativo">${formatCurrency(data.desp_nao_computadas || 0)}</td>
+                    <td class="text-end">${data.rcl_ajustada ? formatPercent(((data.desp_nao_computadas || 0) / data.rcl_ajustada) * 100) : '0,00%'}</td>
+                </tr>
+                <tr>
+                    <td style="padding-left:20px;">(-) Indenizações por demissão</td>
+                    <td class="text-end valor-monetario valor-negativo">${formatCurrency(data.indenizacoes_demissao || 0)}</td>
+                    <td class="text-end">${data.rcl_ajustada ? formatPercent(((data.indenizacoes_demissao || 0) / data.rcl_ajustada) * 100) : '0,00%'}</td>
+                </tr>
+                <tr>
+                    <td style="padding-left:20px;">(-) Decisões judiciais de períodos anteriores</td>
+                    <td class="text-end valor-monetario valor-negativo">${formatCurrency(data.decisoes_judiciais_ant || 0)}</td>
+                    <td class="text-end">${data.rcl_ajustada ? formatPercent(((data.decisoes_judiciais_ant || 0) / data.rcl_ajustada) * 100) : '0,00%'}</td>
+                </tr>
+                <tr>
+                    <td style="padding-left:20px;">(-) Despesas de exercícios anteriores</td>
+                    <td class="text-end valor-monetario valor-negativo">${formatCurrency(data.desp_exercicios_ant || 0)}</td>
+                    <td class="text-end">${data.rcl_ajustada ? formatPercent(((data.desp_exercicios_ant || 0) / data.rcl_ajustada) * 100) : '0,00%'}</td>
+                </tr>
+                <tr>
+                    <td style="padding-left:20px;">(-) Inativos/pensionistas c/ recursos vinculados</td>
+                    <td class="text-end valor-monetario valor-negativo">${formatCurrency(data.inativos_pensionistas_vinc || 0)}</td>
+                    <td class="text-end">${data.rcl_ajustada ? formatPercent(((data.inativos_pensionistas_vinc || 0) / data.rcl_ajustada) * 100) : '0,00%'}</td>
+                </tr>
+                <tr>
+                    <td style="padding-left:20px;">(-) ACS/ACE c/ recursos vinculados</td>
+                    <td class="text-end valor-monetario valor-negativo">${formatCurrency(data.acs_ace_recursos_vinc || 0)}</td>
+                    <td class="text-end">${data.rcl_ajustada ? formatPercent(((data.acs_ace_recursos_vinc || 0) / data.rcl_ajustada) * 100) : '0,00%'}</td>
+                </tr>
+                <tr>
+                    <td style="padding-left:20px;">(-) Outras deduções</td>
+                    <td class="text-end valor-monetario valor-negativo">${formatCurrency(data.outras_deducoes || 0)}</td>
+                    <td class="text-end">${data.rcl_ajustada ? formatPercent(((data.outras_deducoes || 0) / data.rcl_ajustada) * 100) : '0,00%'}</td>
+                </tr>
+                <tr class="table-active fw-bold">
+                    <td><strong>DESPESA LÍQUIDA COM PESSOAL</strong></td>
+                    <td class="text-end valor-monetario"><strong>${formatCurrency(data.despesa_liquida_pessoal || 0)}</strong></td>
+                    <td class="text-end"><strong>${data.rcl_ajustada ? formatPercent(((data.despesa_liquida_pessoal || 0) / data.rcl_ajustada) * 100) : '0,00%'}</strong></td>
+                </tr>
+                <tr>
+                    <td style="padding-left:20px;">Limite Legal (49.00% da RCL Ajustada)</td>
+                    <td class="text-end valor-monetario valor-positivo">${formatCurrency(data.rcl_ajustada * 0.49)}</td>
+                    <td class="text-end">49.00%</td>
+                </tr>
+                <tr>
+                    <td style="padding-left:20px;">Limite Prudencial (46.55% da RCL Ajustada)</td>
+                    <td class="text-end valor-monetario valor-positivo">${formatCurrency(data.rcl_ajustada * 0.4655)}</td>
+                    <td class="text-end">46.55%</td>
+                </tr>
+                <tr>
+                    <td style="padding-left:20px;">Limite de Alerta (44.10% da RCL Ajustada)</td>
+                    <td class="text-end valor-monetario valor-positivo">${formatCurrency(data.rcl_ajustada * 0.441)}</td>
+                    <td class="text-end">44.10%</td>
+                </tr>
+            `;
+        }
+        
+        console.log('Limites LRF atualizados com sucesso!');
+        setTimeout(iframeUpdateHeight, 100);
+        
+    } catch (error) {
+        console.error('Erro ao atualizar limites LRF:', error);
+    }
+};
+
+// ============================================
+// FUNÇÃO AUXILIAR - updateProgressBarColor (corrigida)
+// ============================================
+function updateProgressBarColor(percentual, limiteAlerta, limitePrudencial, limiteMaximo) {
+    const bar = document.getElementById('progressBar');
+    const legalCard = document.getElementById('limiteLegalCard');
+    const prudCard = document.getElementById('limitePrudencialCard');
+    const alertCard = document.getElementById('limiteAlertaCard');
+    
+    if (!bar) return;
+    
+    // Reset classes
+    bar.className = 'progress-bar-limite';
+    if (legalCard) legalCard.className = 'limite-card';
+    if (prudCard) prudCard.className = 'limite-card';
+    if (alertCard) alertCard.className = 'limite-card';
+    
+    if (percentual <= limiteAlerta) {
+        bar.classList.add('safe');
+        if (legalCard) legalCard.classList.add('safe');
+        if (prudCard) prudCard.classList.add('safe');
+        if (alertCard) alertCard.classList.add('safe');
+    } else if (percentual <= limitePrudencial) {
+        bar.classList.add('warning');
+        if (legalCard) legalCard.classList.add('safe');
+        if (prudCard) prudCard.classList.add('warning');
+        if (alertCard) alertCard.classList.add('warning');
+    } else if (percentual <= limiteMaximo) {
+        bar.classList.add('danger');
+        if (legalCard) legalCard.classList.add('warning');
+        if (prudCard) prudCard.classList.add('danger');
+        if (alertCard) alertCard.classList.add('danger');
+    } else {
+        bar.classList.add('danger');
+        if (legalCard) legalCard.classList.add('danger');
+        if (prudCard) prudCard.classList.add('danger');
+        if (alertCard) alertCard.classList.add('danger');
+    }
+}
+
+
+// ============================================
+// RENDERIZAÇÃO DOWNLOADS
+// ============================================
+function renderizarDownloads() {
+    const container = document.getElementById('downloads-content');
+    if (!container) return;
+    
+    container.innerHTML = `
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <div class="card-stats p-4 bg-white rounded shadow-sm h-100">
+                    <h4 class="fw-bold text-start mb-3">
+                        <i class="material-icons me-2"></i> 
+                        Portal de Dados Abertos
+                    </h4>
+                    <p class="text-muted text-justify" style="font-size: 13px; text-align: justify;">
+                        Acesse o conjunto de dados completo de Despesa com Pessoal no Portal de Dados Abertos de Minas Gerais, 
+                        documentados conforme especificações Frictionless Data.
+                    </p>
+                    <div class="mt-4 text-end">
+                        <a href="https://dados.mg.gov.br/dataset/despesa-pessoal-mg" 
+                           target="_blank" 
+                           class="btn-export text-decoration-none fw-bold d-inline-flex align-items-center justify-content-center px-4 py-2"
+                           style="max-width: 100%; width: auto; white-space: nowrap;">
+                            <i class="material-icons me-2" style="font-size: 16px;"></i>
+                            Acessar Portal de Dados MG
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+                <div class="card-stats p-4 bg-white rounded shadow-sm h-100">
+                    <h4 class="fw-bold text-start mb-3">
+                        <i class="material-icons me-2"></i> 
+                        Relatório de Gestão Fiscal
+                    </h4>
+                    <p class="text-muted text-justify" style="font-size: 13px; text-align: justify;">
+                        Acesse os Relatórios de Gestão Fiscal (RGF) publicados pela Secretaria de Estado da Fazenda, 
+                        com a apuração detalhada dos limites da despesa com pessoal e demonstrativos da Receita Corrente Líquida.
+                    </p>
+                    <div class="mt-4 text-end">
+                        <a href="https://www.fazenda.mg.gov.br/governo/contadoria_geral/gestaofiscal/" 
+                           target="_blank" 
+                           class="btn-export text-decoration-none fw-bold d-inline-block px-4 py-2">
+                            <i class="material-icons me-2" style="font-size: 16px; vertical-align: middle;"></i>
+                            Acessar Portal da Fazenda
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="table-container">
+                    <div class="table-header">
+                        <span class="table-title">METADADOS - Estrutura de Dados</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Campo</th>
+                                    <th>Descrição</th>
+                                    <th>Tipo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>rcl</code></td>
+                                    <td>Receita Corrente Líquida (RCL) do ente, base para cálculo dos limites da LRF</td>
+                                    <td>Número (BRL)</td>
+                                </tr>
+                                <tr>
+                                    <td><code>transf_emendas_individuais</code></td>
+                                    <td>Transferências obrigatórias da União relativas às emendas individuais (art. 166, §1º da CF)</td>
+                                    <td>Número (BRL)</td>
+                                </tr>
+                                <tr>
+                                    <td><code>transf_emendas_bancada</code></td>
+                                    <td>Transferências obrigatórias da União relativas às emendas de bancada (art. 166, §16 da CF)</td>
+                                    <td>Número (BRL)</td>
+                                </tr>
+                                <tr>
+                                    <td><code>transf_acs_ace</code></td>
+                                    <td>Transferências da União para pagamento de agentes comunitários de saúde e de combate às endemias (CF art. 198, §11)</td>
+                                    <td>Número (BRL)</td>
+                                </tr>
+                                <tr>
+                                    <td><code>outras_deducoes_rcl</code></td>
+                                    <td>Outras deduções constitucionais ou legais aplicáveis à RCL</td>
+                                    <td>Número (BRL)</td>
+                                </tr>
+                                <tr>
+                                    <td><code>rcl_ajustada</code></td>
+                                    <td>Receita Corrente Líquida ajustada para cálculo dos limites da despesa com pessoal (RCL - deduções)</td>
+                                    <td>Número (BRL)</td>
+                                </tr>
+                                <tr>
+                                    <td><code>dtp_rcl</code></td>
+                                    <td>Despesa Total com Pessoal em relação à RCL (somatório das despesas com pessoal consideradas)</td>
+                                    <td>Número (BRL)</td>
+                                </tr>
+                                <tr>
+                                    <td><code>limite_maximo</code></td>
+                                    <td>Limite máximo da despesa com pessoal conforme art. 20 da LRF (49% da RCL para o Executivo estadual/municipal)</td>
+                                    <td>Percentual</td>
+                                </tr>
+                                <tr>
+                                    <td><code>limite_prudencial</code></td>
+                                    <td>Limite prudencial da despesa com pessoal (95% do limite máximo, conforme art. 22 da LRF)</td>
+                                    <td>Percentual</td>
+                                </tr>
+                                <tr>
+                                    <td><code>limite_alerta</code></td>
+                                    <td>Limite de alerta da despesa com pessoal (90% do limite máximo, conforme art. 59 da LRF)</td>
+                                    <td>Percentual</td>
+                                </tr>
+                                <tr>
+                                    <td><code>desp_pessoal_nao_exec</code></td>
+                                    <td>Despesa com pessoal não executada orçamentariamente</td>
+                                    <td>Número (BRL)</td>
+                                </tr>
+                                <tr>
+                                    <td><code>desp_nao_computadas</code></td>
+                                    <td>Despesas não computadas para fins de cálculo do limite de pessoal (art. 19, §1º da LRF)</td>
+                                    <td>Número (BRL)</td>
+                                </tr>
+                                <tr>
+                                    <td><code>indenizacoes_demissao</code></td>
+                                    <td>Indenizações por demissão e incentivos à demissão voluntária</td>
+                                    <td>Número (BRL)</td>
+                                </tr>
+                                <tr>
+                                    <td><code>decisoes_judiciais_ant</code></td>
+                                    <td>Despesas decorrentes de decisões judiciais de períodos anteriores ao da apuração</td>
+                                    <td>Número (BRL)</td>
+                                </tr>
+                                <tr>
+                                    <td><code>desp_exercicios_ant</code></td>
+                                    <td>Despesas de exercícios anteriores referentes a períodos anteriores ao da apuração</td>
+                                    <td>Número (BRL)</td>
+                                </tr>
+                                <tr>
+                                    <td><code>inativos_pensionistas_vinc</code></td>
+                                    <td>Despesas com inativos e pensionistas custeadas com recursos vinculados</td>
+                                    <td>Número (BRL)</td>
+                                </tr>
+                                <tr>
+                                    <td><code>acs_ace_recursos_vinc</code></td>
+                                    <td>Despesas com agentes comunitários de saúde e de combate às endemias com recursos vinculados (CF art. 198, §11)</td>
+                                    <td>Número (BRL)</td>
+                                </tr>
+                                <tr>
+                                    <td><code>outras_deducoes</code></td>
+                                    <td>Outras deduções constitucionais ou legais aplicáveis à despesa com pessoal</td>
+                                    <td>Número (BRL)</td>
+                                </tr>
+                                <tr>
+                                    <td><code>despesa_liquida_pessoal</code></td>
+                                    <td>Despesa líquida com pessoal, calculada como (I - II)</td>
+                                    <td>Número (BRL)</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    setTimeout(iframeUpdateHeight, 300);
+}
+// ============================================
+// FUNÇÕES DE DOWNLOAD
+// ============================================
+window.baixarDespesaMensal = function() {
+    const ano = document.getElementById('anoDownloadDespesa')?.value;
+    if (!ano) {
+        alert('Selecione um ano para download');
+        return;
+    }
+    
+    if (!window.despesaMensalData || window.despesaMensalData.length === 0) {
+        alert('Dados de despesa mensal não disponíveis');
+        return;
+    }
+    
+    const dadosFiltrados = window.despesaMensalData.filter(item => 
+        item.ano && item.ano.toString() === ano
+    );
+    
+    if (dadosFiltrados.length === 0) {
+        alert(`Nenhum dado encontrado para o ano ${ano}`);
+        return;
+    }
+    
+    const cabecalhos = ['ano', 'mes', 'orgao', 'despesa', 'receita_liquida', 'percentual'];
+    const linhas = dadosFiltrados.map(item => 
+        cabecalhos.map(cab => {
+            let valor = item[cab] !== undefined && item[cab] !== null ? item[cab] : '';
+            return `"${valor.toString().replace(/"/g, '""')}"`;
+        }).join(';')
+    );
+    
+    const csv = [cabecalhos.join(';'), ...linhas].join('\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `despesa_pessoal_${ano}.csv`;
+    link.click();
+};
+
+window.baixarLimitesLRF = function() {
+    if (!window.lrfData || window.lrfData.length === 0) {
+        alert('Dados de limites LRF não disponíveis');
+        return;
+    }
+    
+    const cabecalhos = ['periodo', 'limite_legal', 'limite_prudencial', 'limite_alerta_inferior'];
+    const linhas = window.lrfData.map(item => 
+        cabecalhos.map(cab => {
+            let valor = item[cab] !== undefined && item[cab] !== null ? item[cab] : '';
+            return `"${valor.toString().replace(/"/g, '""')}"`;
+        }).join(';')
+    );
+    
+    const csv = [cabecalhos.join(';'), ...linhas].join('\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'limites_lrf.csv';
+    link.click();
+};
+
+window.baixarTodosDados = function() {
+    if ((!window.despesaMensalData || window.despesaMensalData.length === 0) && 
+        (!window.lrfData || window.lrfData.length === 0)) {
+        alert('Nenhum dado disponível para download');
+        return;
+    }
+    
+    // Criar um objeto combinado
+    const dadosCompletos = {
+        despesa_mensal: window.despesaMensalData || [],
+        limites_lrf: window.lrfData || []
+    };
+    
+    // Converter para JSON e depois para CSV simplificado
+    const jsonStr = JSON.stringify(dadosCompletos, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'dados_completos.json';
+    link.click();
+};
+
+    // ============================================
+    // FUNÇÕES DE EXPORTAÇÃO
+    // ============================================
+    window.exportarVisaoGeralCSV = function() {
+        const dadosAno = allData[currentDisplayData.ano] || [];
+        if (dadosAno.length === 0) {
+            alert('Nenhum dado disponível para exportação.');
+            return;
+        }
+        
+        let linhas = [];
+        let cabecalhos = ['Descrição', 'Valor (R$)'];
+        
+        if (currentDisplayData.mes) {
+            const mesData = dadosAno.find(item => item.MES === currentDisplayData.mes);
+            if (mesData) {
+                linhas = [
+                    ['DESPESA BRUTA COM PESSOAL', mesData.despesa_bruta],
+                    ['Pessoal Ativo', mesData.pessoal_ativo],
+                    ['Vencimentos e Vantagens', mesData.vencimentos_vantagens],
+                    ['Obrigações Patronais', mesData.obrigacoes_patronais],
+                    ['Pessoal Inativo e Pensionistas', mesData.inativos_pensionistas],
+                    ['Aposentadorias', mesData.aposentadorias],
+                    ['Pensões', mesData.pensoes],
+                    ['DESPESAS NÃO COMPUTADAS', mesData.total_nao_computadas],
+                    ['DESPESA LÍQUIDA COM PESSOAL', mesData.despesa_liquida]
+                ];
+            }
+        } else {
+            const totalBruta = dadosAno.reduce((s, i) => s + i.despesa_bruta, 0);
+            const totalAtivo = dadosAno.reduce((s, i) => s + i.pessoal_ativo, 0);
+            const totalVencimentos = dadosAno.reduce((s, i) => s + i.vencimentos_vantagens, 0);
+            const totalObrigacoes = dadosAno.reduce((s, i) => s + i.obrigacoes_patronais, 0);
+            const totalInativo = dadosAno.reduce((s, i) => s + i.inativos_pensionistas, 0);
+            const totalAposentadorias = dadosAno.reduce((s, i) => s + i.aposentadorias, 0);
+            const totalPensoes = dadosAno.reduce((s, i) => s + i.pensoes, 0);
+            const totalNaoComputadas = dadosAno.reduce((s, i) => s + i.total_nao_computadas, 0);
+            const totalLiquida = dadosAno.reduce((s, i) => s + i.despesa_liquida, 0);
+            
+            linhas = [
+                ['DESPESA BRUTA COM PESSOAL', totalBruta],
+                ['Pessoal Ativo', totalAtivo],
+                ['Vencimentos e Vantagens', totalVencimentos],
+                ['Obrigações Patronais', totalObrigacoes],
+                ['Pessoal Inativo e Pensionistas', totalInativo],
+                ['Aposentadorias', totalAposentadorias],
+                ['Pensões', totalPensoes],
+                ['DESPESAS NÃO COMPUTADAS', totalNaoComputadas],
+                ['DESPESA LÍQUIDA COM PESSOAL', totalLiquida]
+            ];
+        }
+        
+        const csvContent = [cabecalhos.join(';'), ...linhas.map(l => l.map(c => `"${String(c).replace(/"/g, '""')}"`).join(';'))].join('\n');
+        const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `visao_geral_${currentDisplayData.ano}${currentDisplayData.mes ? '_' + currentDisplayData.mes : ''}.csv`;
+        link.click();
+    };
+
+    window.exportarVisaoGeralPDF = function() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ orientation: 'landscape' });
+        
+        const dadosAno = allData[currentDisplayData.ano] || [];
+        let dadosTabela = [];
+        
+        if (currentDisplayData.mes) {
+            const mesData = dadosAno.find(item => item.MES === currentDisplayData.mes);
+            if (mesData) {
+                dadosTabela = [
+                    ['DESPESA BRUTA COM PESSOAL', formatCurrency(mesData.despesa_bruta)],
+                    ['Pessoal Ativo', formatCurrency(mesData.pessoal_ativo)],
+                    ['Vencimentos e Vantagens', formatCurrency(mesData.vencimentos_vantagens)],
+                    ['Obrigações Patronais', formatCurrency(mesData.obrigacoes_patronais)],
+                    ['Pessoal Inativo e Pensionistas', formatCurrency(mesData.inativos_pensionistas)],
+                    ['Aposentadorias', formatCurrency(mesData.aposentadorias)],
+                    ['Pensões', formatCurrency(mesData.pensoes)],
+                    ['DESPESAS NÃO COMPUTADAS', formatCurrency(mesData.total_nao_computadas)],
+                    ['DESPESA LÍQUIDA COM PESSOAL', formatCurrency(mesData.despesa_liquida)]
+                ];
+            }
+        } else {
+            const totalBruta = dadosAno.reduce((s, i) => s + i.despesa_bruta, 0);
+            const totalAtivo = dadosAno.reduce((s, i) => s + i.pessoal_ativo, 0);
+            const totalVencimentos = dadosAno.reduce((s, i) => s + i.vencimentos_vantagens, 0);
+            const totalObrigacoes = dadosAno.reduce((s, i) => s + i.obrigacoes_patronais, 0);
+            const totalInativo = dadosAno.reduce((s, i) => s + i.inativos_pensionistas, 0);
+            const totalAposentadorias = dadosAno.reduce((s, i) => s + i.aposentadorias, 0);
+            const totalPensoes = dadosAno.reduce((s, i) => s + i.pensoes, 0);
+            const totalNaoComputadas = dadosAno.reduce((s, i) => s + i.total_nao_computadas, 0);
+            const totalLiquida = dadosAno.reduce((s, i) => s + i.despesa_liquida, 0);
+            
+            dadosTabela = [
+                ['DESPESA BRUTA COM PESSOAL', formatCurrency(totalBruta)],
+                ['Pessoal Ativo', formatCurrency(totalAtivo)],
+                ['Vencimentos e Vantagens', formatCurrency(totalVencimentos)],
+                ['Obrigações Patronais', formatCurrency(totalObrigacoes)],
+                ['Pessoal Inativo e Pensionistas', formatCurrency(totalInativo)],
+                ['Aposentadorias', formatCurrency(totalAposentadorias)],
+                ['Pensões', formatCurrency(totalPensoes)],
+                ['DESPESAS NÃO COMPUTADAS', formatCurrency(totalNaoComputadas)],
+                ['DESPESA LÍQUIDA COM PESSOAL', formatCurrency(totalLiquida)]
+            ];
+        }
+        
+        doc.autoTable({
+            head: [['Descrição', 'Valor (R$)']],
+            body: dadosTabela,
+            didDrawPage: (data) => {
+                doc.setFontSize(10);
+                doc.text('Visão Geral - Despesa com Pessoal', 14, 10);
+                doc.text(`Período: ${currentDisplayData.mes ? monthNames[currentDisplayData.mes] + '/' : 'Anual '}${currentDisplayData.ano}`, 14, 18);
+                doc.text(`Emitido em: ${new Date().toLocaleString('pt-BR')}`, 14, doc.internal.pageSize.height - 5);
+            }
+        });
+        
+        doc.save(`visao_geral_${currentDisplayData.ano}${currentDisplayData.mes ? '_' + currentDisplayData.mes : ''}.pdf`);
+    };
+
+    window.exportarEvolucaoCSV = function() {
+        const dadosAno = allData[currentDisplayData.ano] || [];
+        if (dadosAno.length === 0) {
+            alert('Nenhum dado disponível.');
+            return;
+        }
+        
+        const cabecalhos = ['Mês', 'Despesa Bruta', 'Despesa Líquida', 'Pessoal Ativo', 'Inativos/Pensionistas', 'Variação %'];
+        const linhas = dadosAno.map((item, i) => {
+            let variacao = '';
+            if (i > 0 && dadosAno[i-1].despesa_bruta > 0) {
+                variacao = (((item.despesa_bruta - dadosAno[i-1].despesa_bruta) / dadosAno[i-1].despesa_bruta) * 100).toFixed(2);
+            }
+            return [
+                `${monthNames[item.MES]}/${item.ANO}`,
+                item.despesa_bruta,
+                item.despesa_liquida,
+                item.pessoal_ativo,
+                item.inativos_pensionistas,
+                variacao
+            ];
+        });
+        
+        const csvContent = [cabecalhos.join(';'), ...linhas.map(l => l.map(c => `"${String(c).replace(/"/g, '""')}"`).join(';'))].join('\n');
+        const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `evolucao_${currentDisplayData.ano}.csv`;
+        link.click();
+    };
+
+    window.exportarEvolucaoPDF = function() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ orientation: 'landscape' });
+        
+        const dadosAno = allData[currentDisplayData.ano] || [];
+        const dadosTabela = dadosAno.map((item, i) => {
+            let variacao = '';
+            if (i > 0 && dadosAno[i-1].despesa_bruta > 0) {
+                variacao = (((item.despesa_bruta - dadosAno[i-1].despesa_bruta) / dadosAno[i-1].despesa_bruta) * 100).toFixed(2) + '%';
+            }
+            return [
+                `${monthNames[item.MES]}/${item.ANO}`,
+                formatCurrency(item.despesa_bruta, true),
+                formatCurrency(item.despesa_liquida, true),
+                formatCurrency(item.pessoal_ativo, true),
+                formatCurrency(item.inativos_pensionistas, true),
+                variacao || '-'
+            ];
+        });
+        
+        doc.autoTable({
+            head: [['Mês', 'Despesa Bruta', 'Despesa Líquida', 'Pessoal Ativo', 'Inativos/Pensionistas', 'Variação %']],
+            body: dadosTabela,
+            didDrawPage: (data) => {
+                doc.setFontSize(10);
+                doc.text('Evolução Mensal - Despesa com Pessoal', 14, 10);
+                doc.text(`Ano: ${currentDisplayData.ano}`, 14, 18);
+                doc.text(`Emitido em: ${new Date().toLocaleString('pt-BR')}`, 14, doc.internal.pageSize.height - 5);
+            }
+        });
+        
+        doc.save(`evolucao_${currentDisplayData.ano}.pdf`);
+    };
+
+    window.baixarCSVAno = function() {
+        const selectAno = document.getElementById('anoDownload');
+        if (!selectAno || !selectAno.value) {
+            alert('Selecione um ano para baixar.');
+            return;
+        }
+        
+        const ano = selectAno.value;
+        const dadosAno = allData[ano];
+        
+        if (!dadosAno || dadosAno.length === 0) {
+            alert('Nenhum dado encontrado para o ano selecionado.');
+            return;
+        }
+        
+        // Preparar dados para exportação (formato longo)
+        const cabecalhos = ['mes_referencia', 'despesa_bruta', 'pessoal_ativo', 'vencimentos_vantagens', 
+                           'obrigacoes_patronais', 'inativos_pensionistas', 'aposentadorias', 'pensoes',
+                           'desp_pessoal_nao_exec', 'desp_nao_computadas', 'indenizacoes_demissao',
+                           'decisoes_judiciais_ant', 'desp_exercicios_ant', 'inativos_pensionistas_vinc',
+                           'acs_ace_recursos_vinc', 'outras_deducoes', 'despesa_liquida'];
+        
+        const linhas = dadosAno.map(item => {
+            return [
+                `${item.MES}/${item.ANO}`,
+                item.despesa_bruta,
+                item.pessoal_ativo,
+                item.vencimentos_vantagens,
+                item.obrigacoes_patronais,
+                item.inativos_pensionistas,
+                item.aposentadorias,
+                item.pensoes,
+                item.desp_pessoal_nao_exec || 0,
+                item.desp_nao_computadas || 0,
+                item.indenizacoes_demissao || 0,
+                item.decisoes_judiciais_ant || 0,
+                item.desp_exercicios_ant || 0,
+                item.inativos_pensionistas_vinc || 0,
+                item.acs_ace_recursos_vinc || 0,
+                item.outras_deducoes || 0,
+                item.despesa_liquida
+            ];
+        });
+        
+        const csvContent = [cabecalhos.join(';'), ...linhas.map(l => l.map(c => `"${String(c).replace(/"/g, '""')}"`).join(';'))].join('\n');
+        const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `despesa_pessoal_${ano}.csv`;
+        link.click();
+    };
+
+    window.baixarTodosCSV = function() {
+        const todosAnos = Object.keys(allData).sort();
+        if (todosAnos.length === 0) {
+            alert('Nenhum dado disponível.');
+            return;
+        }
+        
+        let todasLinhas = [];
+        const cabecalhos = ['ano', 'mes', 'despesa_bruta', 'pessoal_ativo', 'vencimentos_vantagens', 
+                           'obrigacoes_patronais', 'inativos_pensionistas', 'aposentadorias', 'pensoes',
+                           'desp_pessoal_nao_exec', 'desp_nao_computadas', 'indenizacoes_demissao',
+                           'decisoes_judiciais_ant', 'desp_exercicios_ant', 'inativos_pensionistas_vinc',
+                           'acs_ace_recursos_vinc', 'outras_deducoes', 'despesa_liquida'];
+        
+        todosAnos.forEach(ano => {
+            const dadosAno = allData[ano] || [];
+            dadosAno.forEach(item => {
+                todasLinhas.push([
+                    ano,
+                    item.MES,
+                    item.despesa_bruta,
+                    item.pessoal_ativo,
+                    item.vencimentos_vantagens,
+                    item.obrigacoes_patronais,
+                    item.inativos_pensionistas,
+                    item.aposentadorias,
+                    item.pensoes,
+                    item.desp_pessoal_nao_exec || 0,
+                    item.desp_nao_computadas || 0,
+                    item.indenizacoes_demissao || 0,
+                    item.decisoes_judiciais_ant || 0,
+                    item.desp_exercicios_ant || 0,
+                    item.inativos_pensionistas_vinc || 0,
+                    item.acs_ace_recursos_vinc || 0,
+                    item.outras_deducoes || 0,
+                    item.despesa_liquida
+                ]);
+            });
+        });
+        
+        const csvContent = [cabecalhos.join(';'), ...todasLinhas.map(l => l.map(c => `"${String(c).replace(/"/g, '""')}"`).join(';'))].join('\n');
+        const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'despesa_pessoal_completo.csv';
+        link.click();
+    };
+
+    // ============================================
+    // COMPARTILHAMENTO
+    // ============================================
+    window.toggleShare = function(id) {
+        document.querySelectorAll('.share-options').forEach(opt => opt.classList.remove('show'));
+        const options = document.getElementById(`shareOptions${id}`);
+        if (options) options.classList.toggle('show');
+    };
+
+    window.copiarLink = function(e, id) {
+        e.preventDefault();
+        navigator.clipboard.writeText(window.location.href).then(() => {
+            showSuccess('Link copiado!');
+        }).catch(() => {
+            const textarea = document.createElement('textarea');
+            textarea.value = window.location.href;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            showSuccess('Link copiado!');
+        });
+        document.getElementById(`shareOptions${id}`)?.classList.remove('show');
+    };
+
+    window.compartilharFacebook = function(e, id) {
+        e.preventDefault();
+        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`, '_blank');
+        document.getElementById(`shareOptions${id}`)?.classList.remove('show');
+    };
+    
+    window.compartilharTwitter = function(e, id) {
+        e.preventDefault();
+        window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent('Despesa com Pessoal - Governo de Minas Gerais')}`, '_blank');
+        document.getElementById(`shareOptions${id}`)?.classList.remove('show');
+    };
+    
+    window.compartilharLinkedIn = function(e, id) {
+        e.preventDefault();
+        window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.href)}`, '_blank');
+        document.getElementById(`shareOptions${id}`)?.classList.remove('show');
+    };
+    
+    window.compartilharWhatsApp = function(e, id) {
+        e.preventDefault();
+        window.open(`https://wa.me/?text=${encodeURIComponent('Despesa com Pessoal - Governo de Minas Gerais ' + window.location.href)}`, '_blank');
+        document.getElementById(`shareOptions${id}`)?.classList.remove('show');
+    };
+</script>
+</body>
+</html>
