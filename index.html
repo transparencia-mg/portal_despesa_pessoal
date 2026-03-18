@@ -165,53 +165,6 @@
             box-shadow: 0 0 0 2px rgba(185, 60, 66, 0.15);
         }
 
-        /* ==================== AUTOCOMPLETE ==================== */
-        .autocomplete-container {
-            position: relative;
-            width: 100%;
-        }
-        
-        .autocomplete-suggestions {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            max-height: 250px;
-            overflow-y: auto;
-            background: white;
-            border: 1px solid #dee2e6;
-            border-radius: 6px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            z-index: 1000;
-            display: none;
-        }
-        
-        .autocomplete-suggestions.show {
-            display: block;
-        }
-        
-        .autocomplete-suggestion {
-            padding: 10px 12px;
-            cursor: pointer;
-            font-size: 13px;
-            border-bottom: 1px solid #f1f1f1;
-            transition: background 0.2s;
-        }
-        
-        .autocomplete-suggestion:hover {
-            background-color: var(--background-light);
-            color: var(--accent-red);
-        }
-        
-        .autocomplete-suggestion:last-child {
-            border-bottom: none;
-        }
-        
-        .autocomplete-suggestion strong {
-            color: var(--accent-red);
-            font-weight: 700;
-        }
-
         /* ==================== CARDS DE MÉTRICAS ==================== */
         .metric-card {
             background: white;
@@ -1053,13 +1006,9 @@
     // ============================================
     // CONFIGURAÇÕES E VARIÁVEIS GLOBAIS
     // ============================================
-    const GITHUB_BASE_URL = 'https://raw.githubusercontent.com/transparencia-mg/despesa-pessoal-mg/main/dataset/data/';
-    
-    // Arquivos CSV atualizados com os novos nomes de colunas
-    const DESPESA_MENSAL_CSV = 'despesa_pessoal_mensal.csv';
-    const LIMITES_LRF_CSV = 'limites_lrf.csv';
+    const URL_DESPESA_MENSAL = 'https://raw.githubusercontent.com/transparencia-mg/portal_despesa_pessoal/refs/heads/main/dataset/data/despesa_pessoal_mensal.csv';
+    const URL_LIMITES_LRF = 'https://raw.githubusercontent.com/transparencia-mg/portal_despesa_pessoal/refs/heads/main/dataset/data/limites_lrf.csv';
 
-    // Mapeamento de meses
     const monthNames = {
         '01': 'Janeiro', '02': 'Fevereiro', '03': 'Março',
         '04': 'Abril', '05': 'Maio', '06': 'Junho',
@@ -1069,7 +1018,6 @@
     
     const mesesAbreviados = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 
-    // Cores dos gráficos
     const chartColors = {
         despesaBruta: '#29435A',
         pessoalAtivo: '#2F5D8A',
@@ -1089,7 +1037,6 @@
     let limitesData = {};
     let charts = {};
     
-    // Estado atual
     let currentDisplayData = {
         ano: '2024',
         mes: '12',
@@ -1104,15 +1051,8 @@
         periodosDisponiveis: []
     };
 
-    // Estado para gráfico acumulado
     let isAccumulated = false;
     
-    // Estado para ordenação
-    let sortConfig = {
-        coluna: '',
-        direcao: 'asc'
-    };
-
     // ============================================
     // FUNÇÕES DE INICIALIZAÇÃO
     // ============================================
@@ -1238,11 +1178,27 @@
     function parseNumber(value) {
         if (!value || value === ' -   ' || value === '-') return 0;
         
-        // Remove pontos de milhar e substitui vírgula decimal por ponto
-        const strValue = String(value).trim();
-        const cleaned = strValue.replace(/\./g, '').replace(',', '.');
-        const parsed = parseFloat(cleaned);
+        // Converte para string e trata valores negativos com ponto
+        let strValue = String(value).trim();
         
+        // Substitui vírgula por ponto para decimal
+        strValue = strValue.replace(',', '.');
+        
+        // Remove pontos de milhar (apenas se tiver mais de um ponto ou padrão brasileiro)
+        const parts = strValue.split('.');
+        if (parts.length > 2) {
+            // Provavelmente é um número brasileiro com pontos de milhar
+            strValue = strValue.replace(/\./g, '');
+            // Recoloca o último ponto como decimal se existir
+            if (strValue.includes(',')) {
+                strValue = strValue.replace(',', '.');
+            }
+        }
+        
+        // Remove qualquer caractere não numérico, exceto ponto e sinal de menos
+        strValue = strValue.replace(/[^\d.-]/g, '');
+        
+        const parsed = parseFloat(strValue);
         return isNaN(parsed) ? 0 : parsed;
     }
 
@@ -1258,22 +1214,6 @@
         return `${value.toFixed(2).replace('.', ',')}%`;
     }
 
-    function formatarMesAno(mesAno) {
-        if (!mesAno) return '';
-        
-        // Formato esperado: "Jan/24" ou similar
-        const match = String(mesAno).match(/([a-z]{3})\/(\d{2})/i);
-        if (match) {
-            const mesStr = match[1].toLowerCase();
-            const ano = '20' + match[2];
-            const meses = { 'jan':1,'fev':2,'mar':3,'abr':4,'mai':5,'jun':6,'jul':7,'ago':8,'set':9,'out':10,'nov':11,'dez':12 };
-            const mesNum = meses[mesStr] || 1;
-            return `${monthNames[String(mesNum).padStart(2,'0')]}/${ano}`;
-        }
-        
-        return mesAno;
-    }
-
     function getMonthNumber(mesStr) {
         const meses = {
             'jan':1,'fev':2,'mar':3,'abr':4,'mai':5,'jun':6,
@@ -1283,276 +1223,183 @@
     }
 
     // ============================================
-    // CARREGAMENTO DE DADOS
+    // CARREGAMENTO DE DADOS REAIS
     // ============================================
-// ============================================
-// FUNÇÃO PARA INICIALIZAR DADOS (chamar no carregamento)
-// ============================================
-async function carregarDadosIniciais() {
-    console.log('🚀 Carregando dados de despesa com pessoal...');
-    
-    try {
-        // Simular dados para teste (substituir pela chamada real à API)
-        window.despesaMensalData = [
-            { ano: 2024, mes: 1, orgao: 'Secretaria de Saúde', despesa: 1500000, receita_liquida: 5000000, percentual: 30 },
-            { ano: 2024, mes: 2, orgao: 'Secretaria de Saúde', despesa: 1550000, receita_liquida: 5100000, percentual: 30.4 },
-            { ano: 2024, mes: 3, orgao: 'Secretaria de Saúde', despesa: 1520000, receita_liquida: 5050000, percentual: 30.1 }
-        ];
-        
-        console.log(`✅ Carregados ${window.despesaMensalData.length} registros de despesa mensal`);
-        
-        window.anosDisponiveis = [...new Set(window.despesaMensalData.map(item => item.ano))].sort((a, b) => b - a);
-        console.log('Anos disponíveis:', window.anosDisponiveis);
-        
-        window.lrfData = [
-            { periodo: '2024', limite_legal: 60, limite_prudencial: 57, limite_alerta_inferior: 54 },
-            { periodo: '2023', limite_legal: 60, limite_prudencial: 57, limite_alerta_inferior: 54 }
-        ];
-        
-        console.log(`✅ Carregados ${window.lrfData.length} registros de limites LRF`);
-        
-        // Renderizar as abas
-        renderizarVisaoGeral();
-        renderizarConsulta();
-        renderizarDownloads();
-        
-    } catch (erro) {
-        console.error('Erro no carregamento inicial:', erro);
-    }
-}    
-
-async function carregarDadosIniciais() {
+    async function carregarDadosIniciais() {
         showLoading(true, 'Carregando dados de despesa com pessoal...');
         
         try {
-            console.log('🚀 Carregando dados de despesa com pessoal...');
+            console.log('🚀 Carregando dados...');
             
             // Carregar despesa mensal
-            const urlDespesa = `${GITHUB_BASE_URL}${DESPESA_MENSAL_CSV}`;
-            
-            const dadosDespesa = await new Promise((resolve) => {
-                Papa.parse(urlDespesa, {
-                    download: true,
-                    header: true,
-                    skipEmptyLines: true,
-                    encoding: 'UTF-8',
-                    delimiter: ";",
-                    complete: function(results) {
-                        resolve(results.data || []);
-                    },
-                    error: function(error) {
-                        console.error('Erro ao carregar despesa mensal:', error);
-                        resolve([]);
-                    }
-                });
-            });
-            
+            const dadosDespesa = await carregarCSV(URL_DESPESA_MENSAL);
             console.log(`✅ Carregados ${dadosDespesa.length} registros de despesa mensal`);
             
-            // Processar dados de despesa mensal
-            despesaMensalData = dadosDespesa.map(row => {
-                // Extrair mês/ano da primeira coluna
-                const primeiraChave = Object.keys(row)[0];
-                const mesAnoRaw = row[primeiraChave] || '';
-                
-                let ano = '', mes = '', mesNum = 0, mesAnoFormatado = mesAnoRaw;
-                const match = mesAnoRaw.match(/([a-z]{3})-(\d{2})/i);
-                
-                if (match) {
-                    const mesStr = match[1].toLowerCase();
-                    const anoSufixo = match[2];
-                    ano = `20${anoSufixo}`;
-                    mesNum = getMonthNumber(mesStr);
-                    mes = mesNum.toString().padStart(2, '0');
-                    mesAnoFormatado = `${mesesAbreviados[mesNum-1]}/${ano}`;
-                }
-                
-                // NOVOS NOMES DE COLUNAS conforme solicitado
-                return {
-                    mes_ano: mesAnoFormatado,
-                    mes_ano_raw: mesAnoRaw,
-                    
-                    // Despesas brutas
-                    despesa_bruta: parseNumber(row.despesa_bruta_com_pessoal_i) || parseNumber(row.despesa_bruta),
-                    pessoal_ativo: parseNumber(row.pessoal_ativo),
-                    vencimentos_vantagens: parseNumber(row.vencimentos_vantagens_e_outras_despesas_variaveis) || parseNumber(row.vencimentos_vantagens),
-                    obrigacoes_patronais: parseNumber(row.obrigacoes_patronais),
-                    inativos_pensionistas: parseNumber(row.pessoal_inativo_e_pensionistas) || parseNumber(row.inativos_pensionistas),
-                    aposentadorias: parseNumber(row.aposentadorias_reserva_e_reformas) || parseNumber(row.aposentadorias),
-                    pensoes: parseNumber(row.pensoes),
-                    
-                    // Despesas não computadas (agregadas)
-                    desp_pessoal_nao_exec: parseNumber(row.desp_pessoal_nao_exec),
-                    desp_nao_computadas: parseNumber(row.despesas_nao_computadas_ii_ss_1o_do_art_19_da_lrf) || parseNumber(row.despesas_nao_computadas),
-                    indenizacoes_demissao: parseNumber(row.indenizacoes_demissao),
-                    decisoes_judiciais_ant: parseNumber(row.decisoes_judiciais_ant),
-                    desp_exercicios_ant: parseNumber(row.desp_exercicios_ant),
-                    inativos_pensionistas_vinc: parseNumber(row.inativos_pensionistas_vinc),
-                    acs_ace_recursos_vinc: parseNumber(row.acs_ace_recursos_vinc),
-                    outras_deducoes: parseNumber(row.outras_deducoes),
-                    
-                    // Despesa líquida
-                    despesa_liquida: parseNumber(row.despesa_liquida_com_pessoal_iii_i_ii) || parseNumber(row.despesa_liquida),
-                    
-                    // Soma total de não computadas
-                    total_nao_computadas: 0, // Será calculado depois
-                    
-                    ANO: ano,
-                    MES: mes,
-                    MES_NUM: mesNum
-                };
-            }).filter(item => item.ANO && item.despesa_bruta > 0);
-            
-            // Calcular total de não computadas
-            despesaMensalData.forEach(item => {
-                item.total_nao_computadas = 
-                    (item.desp_pessoal_nao_exec || 0) +
-                    (item.desp_nao_computadas || 0) +
-                    (item.indenizacoes_demissao || 0) +
-                    (item.decisoes_judiciais_ant || 0) +
-                    (item.desp_exercicios_ant || 0) +
-                    (item.inativos_pensionistas_vinc || 0) +
-                    (item.acs_ace_recursos_vinc || 0) +
-                    (item.outras_deducoes || 0);
-            });
-            
-            // Organizar por ano
-            allData = {};
-            despesaMensalData.forEach(item => {
-                if (!allData[item.ANO]) allData[item.ANO] = [];
-                allData[item.ANO].push(item);
-            });
-            
-            Object.keys(allData).forEach(ano => {
-                allData[ano].sort((a, b) => a.MES_NUM - b.MES_NUM);
-            });
-            
-            console.log('Anos disponíveis:', Object.keys(allData));
+            // Processar dados
+            processarDadosDespesa(dadosDespesa);
             
             // Carregar limites LRF
-            const urlLimites = `${GITHUB_BASE_URL}${LIMITES_LRF_CSV}`;
-            
-            const dadosLimites = await new Promise((resolve) => {
-                Papa.parse(urlLimites, {
-                    download: true,
-                    header: true,
-                    skipEmptyLines: true,
-                    encoding: 'UTF-8',
-                    delimiter: ";",
-                    complete: function(results) {
-                        resolve(results.data || []);
-                    },
-                    error: function(error) {
-                        console.error('Erro ao carregar limites LRF:', error);
-                        resolve([]);
-                    }
-                });
-            });
-            
+            const dadosLimites = await carregarCSV(URL_LIMITES_LRF);
             console.log(`✅ Carregados ${dadosLimites.length} registros de limites LRF`);
             
-            // Processar dados de limites com NOVOS NOMES DE COLUNAS
-            limitesLRFData = dadosLimites.map(row => {
-                // Extrair período
-                const periodo = row['mes_ano_a_mes_ano'] || '';
-                
-                // Extrair ano do período (primeiro ano)
-                let ano = '';
-                const matchPeriodo = periodo.match(/(\d{4})/);
-                if (matchPeriodo) {
-                    ano = matchPeriodo[1];
-                }
-                
-                // Valores
-                const rcl = parseNumber(row['receita_corrente_liquida_rcl_iv']);
-                const transf_emendas_individuais = parseNumber(row['transferencias_obrigatorias_da_uniao_relativas_as_emendas_individuais_v_ss_1deg_art_166_da_cf']);
-                const transf_emendas_bancada = parseNumber(row['transferencias_obrigatorias_da_uniao_relativas_as_emendas_de_bancada_art_166_ss_16_da_cf_vi']);
-                const transf_acs_ace = parseNumber(row['transferencias_da_uniao_para_pagamento_de_agentes_comunitarios_de_saude_e_de_combate_as_endemias_cf_art_198_ss_11']);
-                const outras_deducoes_rcl = parseNumber(row['outras_deducoes_constitucionais_ou_legais_aplicaveis_a_rcl']);
-                const rcl_ajustada = parseNumber(row['receita_corrente_liquida_ajustada_para_calculo_dos_limites_da_despesa_com_pessoal_vii_iv_v_vi']);
-                const dtp_rcl = parseNumber(row['despesa_total_com_pessoal_dtp_sobre_a_rcl_vii_iii_a_iii_b']);
-                
-                // Valores das deduções da despesa
-                const desp_pessoal_nao_exec = parseNumber(row['desp_pessoal_nao_exec']);
-                const desp_nao_computadas = parseNumber(row['despesas_nao_computadas_para_fins_de_calculo_do_limite_de_pessoal_art_19_ss_1o_da_lrf']);
-                const indenizacoes_demissao = parseNumber(row['indenizacoes_por_demissao_e_incentivos_a_demissao_voluntaria']);
-                const decisoes_judiciais_ant = parseNumber(row['despesas_decorrentes_de_decisoes_judiciais_de_periodos_anteriores_ao_da_apuracao']);
-                const desp_exercicios_ant = parseNumber(row['despesas_de_exercicios_anteriores_referentes_a_periodos_anteriores_ao_da_apuracao']);
-                const inativos_pensionistas_vinc = parseNumber(row['despesas_com_inativos_e_pensionistas_custeadas_com_recursos_vinculados']);
-                const acs_ace_recursos_vinc = parseNumber(row['despesas_com_agentes_comunitarios_de_saude_e_de_combate_as_endemias_com_recursos_vinculados_cf_art_198_ss_11']);
-                const outras_deducoes = parseNumber(row['outras_deducoes_constitucionais_ou_legais_aplicaveis_a_despesa_com_pessoal']);
-                const despesa_liquida_pessoal = parseNumber(row['despesa_liquida_com_pessoal_calculada_como_i_ii']);
-                
-                // Calcular percentual
-                const percentual_despesa = rcl_ajustada > 0 ? (dtp_rcl / rcl_ajustada) * 100 : 0;
-                
-                return {
-                    periodo: periodo,
-                    ano: ano,
-                    rcl: rcl,
-                    transf_emendas_individuais: transf_emendas_individuais,
-                    transf_emendas_bancada: transf_emendas_bancada,
-                    transf_acs_ace: transf_acs_ace,
-                    outras_deducoes_rcl: outras_deducoes_rcl,
-                    rcl_ajustada: rcl_ajustada,
-                    dtp_rcl: dtp_rcl,
-                    
-                    // Deduções da despesa
-                    desp_pessoal_nao_exec: desp_pessoal_nao_exec,
-                    desp_nao_computadas: desp_nao_computadas,
-                    indenizacoes_demissao: indenizacoes_demissao,
-                    decisoes_judiciais_ant: decisoes_judiciais_ant,
-                    desp_exercicios_ant: desp_exercicios_ant,
-                    inativos_pensionistas_vinc: inativos_pensionistas_vinc,
-                    acs_ace_recursos_vinc: acs_ace_recursos_vinc,
-                    outras_deducoes: outras_deducoes,
-                    despesa_liquida_pessoal: despesa_liquida_pessoal,
-                    
-                    // Limites
-                    limite_maximo: 49.00,
-                    limite_prudencial: 46.55,
-                    limite_alerta: 44.10,
-                    
-                    percentual_despesa: percentual_despesa
-                };
-            }).filter(item => item.periodo);
+            // Processar limites
+            processarDadosLimites(dadosLimites);
             
-            // Organizar limites por período
-            limitesData = {};
-            limitesLRFData.forEach(item => {
-                if (item.periodo) limitesData[item.periodo] = item;
-            });
+            // Definir dados iniciais
+            definirDadosIniciais();
             
-            currentDisplayData.periodosDisponiveis = Object.keys(limitesData).sort().reverse();
-            
-            console.log('Períodos LRF disponíveis:', currentDisplayData.periodosDisponiveis);
-            
-            // Definir dados iniciais (último ano/mês disponível)
-            const anos = Object.keys(allData).sort((a, b) => b - a);
-            if (anos.length > 0) {
-                currentDisplayData.ano = anos[0];
-                const dadosAno = allData[currentDisplayData.ano];
-                if (dadosAno && dadosAno.length > 0) {
-                    const ultimoMes = dadosAno[dadosAno.length - 1];
-                    currentDisplayData.mes = ultimoMes.MES;
-                    currentDisplayData.dados = dadosAno;
-                    currentDisplayData.metrica = calcularMetricas(currentDisplayData.dados, currentDisplayData.mes);
-                }
-            }
-            
-            // Renderizar abas
-            renderizarVisaoGeral();
-            renderizarEvolucao();
-            renderizarLimites();
-            renderizarDownloads();
-            
-            setTimeout(iframeUpdateHeight, 300);
+            // Renderizar tudo
+            renderizarTodasAbas();
             
         } catch (erro) {
-            console.error('Erro no carregamento inicial:', erro);
+            console.error('Erro fatal:', erro);
             showError('Erro ao carregar dados. Tente novamente mais tarde.');
         } finally {
             showLoading(false);
+        }
+    }
+
+    async function carregarCSV(url) {
+        return new Promise((resolve) => {
+            Papa.parse(url, {
+                download: true,
+                header: true,
+                skipEmptyLines: true,
+                encoding: 'UTF-8',
+                delimiter: ";",
+                complete: (results) => resolve(results.data || []),
+                error: (error) => {
+                    console.error('Erro ao carregar:', error);
+                    resolve([]);
+                }
+            });
+        });
+    }
+
+    function processarDadosDespesa(dados) {
+        despesaMensalData = dados.map(row => {
+            const mesAnoRaw = row.mes_ano || '';
+            
+            let ano = '', mes = '', mesNum = 0;
+            const match = mesAnoRaw.match(/([a-z]{3})-(\d{2})/i);
+            
+            if (match) {
+                const mesStr = match[1].toLowerCase();
+                const anoSufixo = match[2];
+                ano = `20${anoSufixo}`;
+                mesNum = getMonthNumber(mesStr);
+                mes = mesNum.toString().padStart(2, '0');
+            }
+            
+            return {
+                mes_ano: mesAnoRaw,
+                ANO: ano,
+                MES: mes,
+                MES_NUM: mesNum,
+                
+                despesa_bruta: parseNumber(row.despesa_bruta_com_pessoal_i),
+                pessoal_ativo: parseNumber(row.pessoal_ativo),
+                vencimentos_vantagens: parseNumber(row.vencimentos_vantagens_e_outras),
+                obrigacoes_patronais: parseNumber(row.obrigacoes_patronais),
+                inativos_pensionistas: parseNumber(row.pessoal_inativo_e_pensionistas),
+                aposentadorias: parseNumber(row.aposentadorias_reservas_e_reformas),
+                pensoes: parseNumber(row.pensoes),
+                outras_despesas_terceirizacoes: parseNumber(row.outras_despesas_terceirizacoes),
+                
+                desp_pessoal_nao_exec: parseNumber(row.desp_pessoal_nao_exec),
+                desp_nao_computadas: parseNumber(row.desp_nao_computadas),
+                indenizacoes_demissao: parseNumber(row.indenizacoes_demissao),
+                decisoes_judiciais_ant: parseNumber(row.decisoes_judiciais_ant),
+                desp_exercicios_ant: parseNumber(row.desp_exercicios_ant),
+                inativos_pensionistas_vinc: parseNumber(row.inativos_pensionistas_vinc),
+                acs_ace_recursos_vinc: parseNumber(row.acs_ace_recursos_vinc) || parseNumber(row.acs_ace_recursos_vinc_2),
+                outras_deducoes: parseNumber(row.outras_deducoes),
+                
+                despesa_liquida: parseNumber(row.despesa_liquida_pessoal),
+                total_nao_computadas: 0
+            };
+        }).filter(item => item.ANO && item.despesa_bruta > 0);
+        
+        // Calcular total de não computadas
+        despesaMensalData.forEach(item => {
+            item.total_nao_computadas = 
+                (item.desp_pessoal_nao_exec || 0) +
+                (item.desp_nao_computadas || 0) +
+                (item.indenizacoes_demissao || 0) +
+                (item.decisoes_judiciais_ant || 0) +
+                (item.desp_exercicios_ant || 0) +
+                (item.inativos_pensionistas_vinc || 0) +
+                (item.acs_ace_recursos_vinc || 0) +
+                (item.outras_deducoes || 0);
+        });
+        
+        // Organizar por ano
+        allData = {};
+        despesaMensalData.forEach(item => {
+            if (!allData[item.ANO]) allData[item.ANO] = [];
+            allData[item.ANO].push(item);
+        });
+        
+        Object.keys(allData).forEach(ano => {
+            allData[ano].sort((a, b) => a.MES_NUM - b.MES_NUM);
+        });
+        
+        console.log('Anos disponíveis:', Object.keys(allData));
+    }
+
+    function processarDadosLimites(dados) {
+        limitesLRFData = dados.map(row => {
+            const periodo = row['mes_ano_a_mes_ano'] || '';
+            
+            let ano = '';
+            const matchPeriodo = periodo.match(/(\d{4})/);
+            if (matchPeriodo) ano = matchPeriodo[1];
+            
+            return {
+                periodo: periodo,
+                ano: ano,
+                rcl: parseNumber(row.rcl),
+                transf_emendas_individuais: parseNumber(row.transf_emendas_individudais),
+                transf_emendas_bancada: parseNumber(row.transf_emendas_bancada),
+                transf_acs_ace: parseNumber(row.transf_acs_ace),
+                outras_deducoes_rcl: parseNumber(row.outras_deducoes_rcl),
+                rcl_ajustada: parseNumber(row.rcl_ajustada),
+                dtp_rcl: parseNumber(row.dtp_rcl),
+                limite_maximo: parseNumber(row.limite_maximo) || 49.00,
+                limite_prudencial: parseNumber(row.limite_prudencial) || 46.55,
+                limite_alerta: parseNumber(row.limite_alerta) || 44.10,
+                percentual_despesa: 0
+            };
+        }).filter(item => item.periodo);
+        
+        // Calcular percentuais
+        limitesLRFData.forEach(item => {
+            if (item.rcl_ajustada > 0) {
+                item.percentual_despesa = (item.dtp_rcl / item.rcl_ajustada) * 100;
+            }
+        });
+        
+        // Organizar limites por período
+        limitesData = {};
+        limitesLRFData.forEach(item => {
+            if (item.periodo) limitesData[item.periodo] = item;
+        });
+        
+        currentDisplayData.periodosDisponiveis = Object.keys(limitesData).sort().reverse();
+        console.log('Períodos LRF:', currentDisplayData.periodosDisponiveis);
+    }
+
+    function definirDadosIniciais() {
+        const anos = Object.keys(allData).sort((a, b) => b - a);
+        if (anos.length > 0) {
+            currentDisplayData.ano = anos[0];
+            const dadosAno = allData[currentDisplayData.ano];
+            if (dadosAno && dadosAno.length > 0) {
+                const ultimoMes = dadosAno[dadosAno.length - 1];
+                currentDisplayData.mes = ultimoMes.MES;
+                currentDisplayData.dados = dadosAno;
+                currentDisplayData.metrica = calcularMetricas(currentDisplayData.dados, currentDisplayData.mes);
+            }
         }
     }
 
@@ -1567,7 +1414,6 @@ async function carregarDadosIniciais() {
             };
         }
         
-        // Se tem mês específico, pegar dados daquele mês
         if (mesSelecionado) {
             const mesData = dados.find(item => item.MES === mesSelecionado);
             if (mesData) {
@@ -1582,13 +1428,11 @@ async function carregarDadosIniciais() {
             }
         }
         
-        // Caso contrário, somar ano todo
         const totalBruta = dados.reduce((s, i) => s + i.despesa_bruta, 0);
         const totalAtivo = dados.reduce((s, i) => s + i.pessoal_ativo, 0);
         const totalInativo = dados.reduce((s, i) => s + i.inativos_pensionistas, 0);
         const totalLiquida = dados.reduce((s, i) => s + i.despesa_liquida, 0);
         const totalNaoComputadas = dados.reduce((s, i) => s + i.total_nao_computadas, 0);
-        const meses = dados.length;
         
         return {
             despesaBruta: totalBruta,
@@ -1596,9 +1440,16 @@ async function carregarDadosIniciais() {
             inativosPensionistas: totalInativo,
             despesaLiquida: totalLiquida,
             totalNaoComputadas: totalNaoComputadas,
-            mediaMensal: totalBruta / meses,
-            periodo: `Acumulado ${currentDisplayData.ano} (${meses} meses)`
+            periodo: `Acumulado ${currentDisplayData.ano} (${dados.length} meses)`
         };
+    }
+
+    function renderizarTodasAbas() {
+        renderizarVisaoGeral();
+        renderizarEvolucao();
+        renderizarLimites();
+        renderizarDownloads();
+        setTimeout(iframeUpdateHeight, 300);
     }
 
     // ============================================
@@ -1618,32 +1469,30 @@ async function carregarDadosIniciais() {
         const metrica = currentDisplayData.metrica;
         
         // Dados para gráficos
-        const dadosDistribuicao = [];
-        const labelsDistribuicao = [];
+        let dadosDistribuicao = [], labelsDistribuicao = [];
         
         if (currentDisplayData.mes) {
             const mesData = dadosAno.find(item => item.MES === currentDisplayData.mes);
             if (mesData) {
-                dadosDistribuicao.push(
+                dadosDistribuicao = [
                     mesData.pessoal_ativo,
                     mesData.inativos_pensionistas,
                     mesData.total_nao_computadas || 0,
                     Math.max(0, mesData.despesa_bruta - mesData.pessoal_ativo - mesData.inativos_pensionistas - (mesData.total_nao_computadas || 0))
-                );
-                labelsDistribuicao.push('Pessoal Ativo', 'Inativos/Pensionistas', 'Não Computadas', 'Outras');
+                ];
+                labelsDistribuicao = ['Pessoal Ativo', 'Inativos/Pensionistas', 'Não Computadas', 'Outras'];
             }
         } else {
-            const totalBruta = metrica.despesaBruta;
-            dadosDistribuicao.push(
+            dadosDistribuicao = [
                 metrica.pessoalAtivo,
                 metrica.inativosPensionistas,
                 metrica.totalNaoComputadas || 0,
-                Math.max(0, totalBruta - metrica.pessoalAtivo - metrica.inativosPensionistas - (metrica.totalNaoComputadas || 0))
-            );
-            labelsDistribuicao.push('Pessoal Ativo', 'Inativos/Pensionistas', 'Não Computadas', 'Outras');
+                Math.max(0, metrica.despesaBruta - metrica.pessoalAtivo - metrica.inativosPensionistas - (metrica.totalNaoComputadas || 0))
+            ];
+            labelsDistribuicao = ['Pessoal Ativo', 'Inativos/Pensionistas', 'Não Computadas', 'Outras'];
         }
         
-        // Dados para tabela de composição
+        // Dados para tabela
         let dadosTabela = [];
         if (currentDisplayData.mes) {
             const mesData = dadosAno.find(item => item.MES === currentDisplayData.mes);
@@ -1662,17 +1511,12 @@ async function carregarDadosIniciais() {
             }
         } else {
             const totalBruta = metrica.despesaBruta;
-            const meses = dadosAno.length;
-            
-            // Totais anuais
             const totalAtivo = dadosAno.reduce((s, i) => s + i.pessoal_ativo, 0);
             const totalVencimentos = dadosAno.reduce((s, i) => s + i.vencimentos_vantagens, 0);
             const totalObrigacoes = dadosAno.reduce((s, i) => s + i.obrigacoes_patronais, 0);
             const totalInativo = dadosAno.reduce((s, i) => s + i.inativos_pensionistas, 0);
             const totalAposentadorias = dadosAno.reduce((s, i) => s + i.aposentadorias, 0);
             const totalPensoes = dadosAno.reduce((s, i) => s + i.pensoes, 0);
-            const totalNaoComputadas = dadosAno.reduce((s, i) => s + i.total_nao_computadas, 0);
-            const totalLiquida = dadosAno.reduce((s, i) => s + i.despesa_liquida, 0);
             
             dadosTabela = [
                 { descricao: 'DESPESA BRUTA COM PESSOAL', valor: totalBruta, percentual: 100 },
@@ -1682,8 +1526,8 @@ async function carregarDadosIniciais() {
                 { descricao: 'Pessoal Inativo e Pensionistas', valor: totalInativo, percentual: (totalInativo / totalBruta) * 100, indent: 1 },
                 { descricao: 'Aposentadorias', valor: totalAposentadorias, percentual: (totalAposentadorias / totalBruta) * 100, indent: 2 },
                 { descricao: 'Pensões', valor: totalPensoes, percentual: (totalPensoes / totalBruta) * 100, indent: 2 },
-                { descricao: 'DESPESAS NÃO COMPUTADAS', valor: totalNaoComputadas, percentual: (totalNaoComputadas / totalBruta) * 100, isNegative: true },
-                { descricao: 'DESPESA LÍQUIDA COM PESSOAL', valor: totalLiquida, percentual: (totalLiquida / totalBruta) * 100, isTotal: true }
+                { descricao: 'DESPESAS NÃO COMPUTADAS', valor: metrica.totalNaoComputadas, percentual: (metrica.totalNaoComputadas / totalBruta) * 100, isNegative: true },
+                { descricao: 'DESPESA LÍQUIDA COM PESSOAL', valor: metrica.despesaLiquida, percentual: (metrica.despesaLiquida / totalBruta) * 100, isTotal: true }
             ];
         }
         
@@ -1713,10 +1557,7 @@ async function carregarDadosIniciais() {
             <div class="row mb-4">
                 <div class="col-md-3 col-6">
                     <div class="metric-card">
-                        <div class="metric-header">
-                            Despesa Bruta
-                            <i class="material-icons" data-bs-toggle="tooltip" title="Despesa bruta com pessoal">info_outline</i>
-                        </div>
+                        <div class="metric-header">Despesa Bruta <i class="material-icons" data-bs-toggle="tooltip" title="Despesa bruta com pessoal">info_outline</i></div>
                         <div class="metric-body">
                             <div class="metric-value">${formatCurrency(metrica.despesaBruta, true)}</div>
                             <div class="metric-change positive">${metrica.periodo}</div>
@@ -1725,10 +1566,7 @@ async function carregarDadosIniciais() {
                 </div>
                 <div class="col-md-3 col-6">
                     <div class="metric-card">
-                        <div class="metric-header">
-                            Pessoal Ativo
-                            <i class="material-icons" data-bs-toggle="tooltip" title="Despesa com pessoal ativo">info_outline</i>
-                        </div>
+                        <div class="metric-header">Pessoal Ativo <i class="material-icons" data-bs-toggle="tooltip" title="Despesa com pessoal ativo">info_outline</i></div>
                         <div class="metric-body">
                             <div class="metric-value">${formatCurrency(metrica.pessoalAtivo, true)}</div>
                             <div class="metric-change positive">${metrica.despesaBruta ? formatPercent((metrica.pessoalAtivo / metrica.despesaBruta) * 100) : '0%'}</div>
@@ -1737,10 +1575,7 @@ async function carregarDadosIniciais() {
                 </div>
                 <div class="col-md-3 col-6">
                     <div class="metric-card">
-                        <div class="metric-header">
-                            Inativos/Pensionistas
-                            <i class="material-icons" data-bs-toggle="tooltip" title="Despesa com inativos e pensionistas">info_outline</i>
-                        </div>
+                        <div class="metric-header">Inativos/Pensionistas <i class="material-icons" data-bs-toggle="tooltip" title="Despesa com inativos e pensionistas">info_outline</i></div>
                         <div class="metric-body">
                             <div class="metric-value">${formatCurrency(metrica.inativosPensionistas, true)}</div>
                             <div class="metric-change warning">${metrica.despesaBruta ? formatPercent((metrica.inativosPensionistas / metrica.despesaBruta) * 100) : '0%'}</div>
@@ -1749,10 +1584,7 @@ async function carregarDadosIniciais() {
                 </div>
                 <div class="col-md-3 col-6">
                     <div class="metric-card">
-                        <div class="metric-header">
-                            Despesa Líquida
-                            <i class="material-icons" data-bs-toggle="tooltip" title="Despesa líquida com pessoal">info_outline</i>
-                        </div>
+                        <div class="metric-header">Despesa Líquida <i class="material-icons" data-bs-toggle="tooltip" title="Despesa líquida com pessoal">info_outline</i></div>
                         <div class="metric-body">
                             <div class="metric-value">${formatCurrency(metrica.despesaLiquida, true)}</div>
                             <div class="metric-change positive">${metrica.despesaBruta ? formatPercent((metrica.despesaLiquida / metrica.despesaBruta) * 100) : '0%'}</div>
@@ -1764,22 +1596,14 @@ async function carregarDadosIniciais() {
             <div class="row mb-4">
                 <div class="col-md-6">
                     <div class="chart-container">
-                        <div class="chart-header">
-                            <h4 class="chart-title">Distribuição da Despesa</h4>
-                        </div>
-                        <div class="chart-wrapper">
-                            <canvas id="chartDistribuicao"></canvas>
-                        </div>
+                        <div class="chart-header"><h4 class="chart-title">Distribuição da Despesa</h4></div>
+                        <div class="chart-wrapper"><canvas id="chartDistribuicao"></canvas></div>
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="chart-container">
-                        <div class="chart-header">
-                            <h4 class="chart-title">Composição do Pessoal Ativo</h4>
-                        </div>
-                        <div class="chart-wrapper">
-                            <canvas id="chartAtivoDetalhado"></canvas>
-                        </div>
+                        <div class="chart-header"><h4 class="chart-title">Composição do Pessoal Ativo</h4></div>
+                        <div class="chart-wrapper"><canvas id="chartAtivoDetalhado"></canvas></div>
                     </div>
                 </div>
             </div>
@@ -1806,11 +1630,7 @@ async function carregarDadosIniciais() {
                 <div class="table-fixed-header-container">
                     <table class="table">
                         <thead>
-                            <tr>
-                                <th>Descrição</th>
-                                <th class="text-end">Valor (R$)</th>
-                                <th class="text-end">% do Total</th>
-                            </tr>
+                            <tr><th>Descrição</th><th class="text-end">Valor (R$)</th><th class="text-end">% do Total</th></tr>
                         </thead>
                         <tbody>
                             ${dadosTabela.map(item => `
@@ -1834,22 +1654,16 @@ async function carregarDadosIniciais() {
         
         container.innerHTML = html;
         
-        // Renderizar gráficos
         setTimeout(() => {
             renderizarGraficoDistribuicao(dadosDistribuicao, labelsDistribuicao);
             renderizarGraficoAtivoDetalhado();
-            
-            const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
-            tooltipTriggerList.forEach(el => new bootstrap.Tooltip(el));
+            document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => new bootstrap.Tooltip(el));
         }, 100);
-        
-        setTimeout(iframeUpdateHeight, 300);
     }
 
     function renderizarGraficoDistribuicao(dados, labels) {
         const ctx = document.getElementById('chartDistribuicao')?.getContext('2d');
         if (!ctx) return;
-        
         if (charts.distribuicao) charts.distribuicao.destroy();
         
         charts.distribuicao = new Chart(ctx, {
@@ -1859,13 +1673,11 @@ async function carregarDadosIniciais() {
                 datasets: [{
                     data: dados,
                     backgroundColor: [chartColors.pessoalAtivo, chartColors.inativosPensionistas, chartColors.despesasNaoComputadas, '#6C7A89'],
-                    borderWidth: 2,
-                    borderColor: '#fff'
+                    borderWidth: 2, borderColor: '#fff'
                 }]
             },
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
+                responsive: true, maintainAspectRatio: false,
                 plugins: {
                     legend: { position: 'bottom', labels: { padding: 15, usePointStyle: true, font: { size: 10 } } },
                     tooltip: {
@@ -1909,26 +1721,16 @@ async function carregarDadosIniciais() {
             data: {
                 labels: [label],
                 datasets: [
-                    { label: 'Vencimentos e Vantagens', data: [vencimentos], backgroundColor: chartColors.vencimentos, borderColor: chartColors.vencimentos, borderWidth: 1 },
-                    { label: 'Obrigações Patronais', data: [obrigacoes], backgroundColor: chartColors.obrigacoesPatronais, borderColor: chartColors.obrigacoesPatronais, borderWidth: 1 }
+                    { label: 'Vencimentos e Vantagens', data: [vencimentos], backgroundColor: chartColors.vencimentos },
+                    { label: 'Obrigações Patronais', data: [obrigacoes], backgroundColor: chartColors.obrigacoesPatronais }
                 ]
             },
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: { callback: (v) => formatCurrency(v, true), font: { size: 10 } }
-                    }
-                },
+                responsive: true, maintainAspectRatio: false,
+                scales: { y: { beginAtZero: true, ticks: { callback: (v) => formatCurrency(v, true), font: { size: 10 } } } },
                 plugins: {
                     legend: { position: 'bottom', labels: { padding: 15, usePointStyle: true, font: { size: 10 } } },
-                    tooltip: {
-                        callbacks: {
-                            label: (ctx) => `${ctx.dataset.label}: ${formatCurrency(ctx.raw)}`
-                        }
-                    }
+                    tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${formatCurrency(ctx.raw)}` } }
                 }
             }
         });
@@ -1940,18 +1742,15 @@ async function carregarDadosIniciais() {
             currentDisplayData.ano = selectAno.value;
             currentDisplayData.dados = allData[currentDisplayData.ano] || [];
             
-            // Atualizar meses disponíveis
             const selectMes = document.getElementById('filtroPeriodoVG');
             if (selectMes) {
                 const mesesDisponiveis = currentDisplayData.dados.map(item => ({
-                    valor: item.MES,
-                    nome: monthNames[item.MES] || item.MES
+                    valor: item.MES, nome: monthNames[item.MES] || item.MES
                 }));
                 
                 selectMes.innerHTML = '<option value="">Anual (acumulado)</option>' +
                     mesesDisponiveis.map(m => `<option value="${m.valor}">${m.nome}</option>`).join('');
                 
-                // Selecionar último mês por padrão
                 if (mesesDisponiveis.length > 0) {
                     const ultimoMes = mesesDisponiveis[mesesDisponiveis.length - 1].valor;
                     selectMes.value = ultimoMes;
@@ -1960,7 +1759,6 @@ async function carregarDadosIniciais() {
                     currentDisplayData.mes = '';
                 }
             }
-            
             aplicarFiltrosVG();
         }
     };
@@ -1981,7 +1779,6 @@ async function carregarDadosIniciais() {
     };
 
     window.limparFiltrosVG = function() {
-        // Voltar para o último ano/mês disponível
         const anos = Object.keys(allData).sort((a, b) => b - a);
         if (anos.length > 0) {
             currentDisplayData.ano = anos[0];
@@ -1993,17 +1790,14 @@ async function carregarDadosIniciais() {
             }
         }
         
-        // Atualizar selects
         const selectAno = document.getElementById('filtroAnoVG');
         if (selectAno) selectAno.value = currentDisplayData.ano;
         
         const selectMes = document.getElementById('filtroPeriodoVG');
         if (selectMes) {
             const mesesDisponiveis = currentDisplayData.dados.map(item => ({
-                valor: item.MES,
-                nome: monthNames[item.MES] || item.MES
+                valor: item.MES, nome: monthNames[item.MES] || item.MES
             }));
-            
             selectMes.innerHTML = '<option value="">Anual (acumulado)</option>' +
                 mesesDisponiveis.map(m => `<option value="${m.valor}">${m.nome}</option>`).join('');
             selectMes.value = currentDisplayData.mes;
@@ -2053,14 +1847,10 @@ async function carregarDadosIniciais() {
                             <h4 class="chart-title">Evolução Mensal da Despesa</h4>
                             <div class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" id="toggleAccumulated" onchange="toggleAcumulado()">
-                                <label class="form-check-label" for="toggleAccumulated" style="font-size: 12px;">
-                                    Acumulado
-                                </label>
+                                <label class="form-check-label" for="toggleAccumulated" style="font-size: 12px;">Acumulado</label>
                             </div>
                         </div>
-                        <div class="chart-wrapper">
-                            <canvas id="chartEvolucao"></canvas>
-                        </div>
+                        <div class="chart-wrapper"><canvas id="chartEvolucao"></canvas></div>
                     </div>
                 </div>
             </div>
@@ -2104,8 +1894,6 @@ async function carregarDadosIniciais() {
         
         atualizarGraficoEvolucao();
         atualizarTabelaEvolucao();
-        
-        setTimeout(iframeUpdateHeight, 300);
     }
 
     function atualizarGraficoEvolucao() {
@@ -2161,31 +1949,14 @@ async function carregarDadosIniciais() {
                     data: datasetData,
                     backgroundColor: datasetColor + '20',
                     borderColor: datasetColor,
-                    borderWidth: 3,
-                    fill: true,
-                    tension: 0.4,
-                    pointBackgroundColor: datasetColor,
-                    pointBorderColor: '#fff',
-                    pointBorderWidth: 2,
-                    pointRadius: 4
+                    borderWidth: 3, fill: true, tension: 0.4,
+                    pointBackgroundColor: datasetColor, pointBorderColor: '#fff', pointBorderWidth: 2, pointRadius: 4
                 }]
             },
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: !isAccumulated,
-                        ticks: { callback: (v) => formatCurrency(v, true), font: { size: 10 } }
-                    }
-                },
-                plugins: {
-                    tooltip: {
-                        callbacks: {
-                            label: (ctx) => `${ctx.dataset.label}: ${formatCurrency(ctx.raw)}`
-                        }
-                    }
-                }
+                responsive: true, maintainAspectRatio: false,
+                scales: { y: { beginAtZero: !isAccumulated, ticks: { callback: (v) => formatCurrency(v, true), font: { size: 10 } } } },
+                plugins: { tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${formatCurrency(ctx.raw)}` } } }
             }
         });
     }
@@ -2261,30 +2032,9 @@ async function carregarDadosIniciais() {
             </div>
 
             <div class="row mb-4">
-                <div class="col-md-4">
-                    <div class="limite-card safe" id="limiteLegalCard">
-                        <div class="label">LIMITE LEGAL</div>
-                        <div class="porcentagem" id="limiteLegalPercentual">49.00%</div>
-                        <div class="valor" id="limiteLegalValor">Carregando...</div>
-                        <div class="limite-info">Máximo permitido (LC 101/2000)</div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="limite-card warning" id="limitePrudencialCard">
-                        <div class="label">LIMITE PRUDENCIAL</div>
-                        <div class="porcentagem" id="limitePrudencialPercentual">46.55%</div>
-                        <div class="valor" id="limitePrudencialValor">Carregando...</div>
-                        <div class="limite-info">95% do limite legal</div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="limite-card danger" id="limiteAlertaCard">
-                        <div class="label">LIMITE DE ALERTA</div>
-                        <div class="porcentagem" id="limiteAlertaPercentual">44.10%</div>
-                        <div class="valor" id="limiteAlertaValor">Carregando...</div>
-                        <div class="limite-info">90% do limite legal</div>
-                    </div>
-                </div>
+                <div class="col-md-4"><div class="limite-card safe" id="limiteLegalCard"><div class="label">LIMITE LEGAL</div><div class="porcentagem" id="limiteLegalPercentual">49.00%</div><div class="valor" id="limiteLegalValor">Carregando...</div><div class="limite-info">Máximo permitido (LC 101/2000)</div></div></div>
+                <div class="col-md-4"><div class="limite-card warning" id="limitePrudencialCard"><div class="label">LIMITE PRUDENCIAL</div><div class="porcentagem" id="limitePrudencialPercentual">46.55%</div><div class="valor" id="limitePrudencialValor">Carregando...</div><div class="limite-info">95% do limite legal</div></div></div>
+                <div class="col-md-4"><div class="limite-card danger" id="limiteAlertaCard"><div class="label">LIMITE DE ALERTA</div><div class="porcentagem" id="limiteAlertaPercentual">44.10%</div><div class="valor" id="limiteAlertaValor">Carregando...</div><div class="limite-info">90% do limite legal</div></div></div>
             </div>
 
             <div class="row mb-4">
@@ -2295,9 +2045,7 @@ async function carregarDadosIniciais() {
                             <span class="badge" id="despesaAtualPercentual" style="background-color: var(--accent-red); color: white; padding: 6px 12px;">Carregando...</span>
                         </div>
                         <div class="p-4">
-                            <div class="progress-limite">
-                                <div class="progress-bar-limite" id="progressBar" style="width: 0%;"></div>
-                            </div>
+                            <div class="progress-limite"><div class="progress-bar-limite" id="progressBar" style="width: 0%;"></div></div>
                             <div class="limite-info mt-2 d-flex justify-content-between">
                                 <span>0%</span>
                                 <span>Alerta: <span id="limiteAlertaValorLabel">44.10%</span></span>
@@ -2308,16 +2056,10 @@ async function carregarDadosIniciais() {
                             
                             <div class="row mt-4">
                                 <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label class="filter-label">Receita Corrente Líquida (RCL)</label>
-                                        <div class="valor-monetario valor-positivo" id="rclTotal" style="font-size: 18px;">Carregando...</div>
-                                    </div>
+                                    <div class="mb-3"><label class="filter-label">Receita Corrente Líquida (RCL)</label><div class="valor-monetario valor-positivo" id="rclTotal" style="font-size: 18px;">Carregando...</div></div>
                                 </div>
                                 <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label class="filter-label">Despesa Total com Pessoal (DTP)</label>
-                                        <div class="valor-monetario" id="despesaExecutada" style="font-size: 18px;">Carregando...</div>
-                                    </div>
+                                    <div class="mb-3"><label class="filter-label">Despesa Total com Pessoal (DTP)</label><div class="valor-monetario" id="despesaExecutada" style="font-size: 18px;">Carregando...</div></div>
                                 </div>
                             </div>
                         </div>
@@ -2326,207 +2068,22 @@ async function carregarDadosIniciais() {
             </div>
 
             <div class="table-container">
-                <div class="table-header">
-                    <span class="table-title">Apuração do Limite Legal - Detalhamento</span>
-                </div>
+                <div class="table-header"><span class="table-title">Apuração do Limite Legal - Detalhamento</span></div>
                 <div class="table-responsive">
                     <table class="table" id="limitesTable">
-                        <thead>
-                            <tr>
-                                <th>Descrição</th>
-                                <th class="text-end">Valor (R$)</th>
-                                <th class="text-end">% da RCL</th>
-                            </tr>
-                        </thead>
-                        <tbody id="limitesTableBody">
-                            <tr><td colspan="3" class="text-center text-muted">Selecione um período para visualizar os dados</td></tr>
-                        </tbody>
+                        <thead><tr><th>Descrição</th><th class="text-end">Valor (R$)</th><th class="text-end">% da RCL</th></tr></thead>
+                        <tbody id="limitesTableBody"><tr><td colspan="3" class="text-center text-muted">Selecione um período para visualizar os dados</td></tr></tbody>
                     </table>
                 </div>
             </div>
         `;
         
-        // Selecionar primeiro período por padrão
         if (periodos.length > 0) {
             const select = document.getElementById('filtroPeriodoLRF');
             if (select) {
                 select.value = periodos[0];
                 atualizarLimitesLRF();
             }
-        }
-        
-        setTimeout(iframeUpdateHeight, 300);
-    }
-
-    function atualizarLimitesLRF() {
-        const select = document.getElementById('filtroPeriodoLRF');
-        if (!select) return;
-        
-        const periodo = select.value;
-        const data = limitesData[periodo];
-        if (!data) return;
-        
-        // Atualizar cards de percentuais
-        document.getElementById('limiteLegalPercentual').textContent = `${data.limite_maximo.toFixed(2).replace('.', ',')}%`;
-        document.getElementById('limitePrudencialPercentual').textContent = `${data.limite_prudencial.toFixed(2).replace('.', ',')}%`;
-        document.getElementById('limiteAlertaPercentual').textContent = `${data.limite_alerta.toFixed(2).replace('.', ',')}%`;
-
-        // Atualizar valores em R$ dos limites
-        document.getElementById('limiteLegalValor').textContent = formatCurrency(data.rcl_ajustada * (data.limite_maximo/100), true);
-        document.getElementById('limitePrudencialValor').textContent = formatCurrency(data.rcl_ajustada * (data.limite_prudencial/100), true);
-        document.getElementById('limiteAlertaValor').textContent = formatCurrency(data.rcl_ajustada * (data.limite_alerta/100), true);
-
-        // Atualizar labels na barra de progresso
-        document.getElementById('limiteLegalValorLabel').textContent = `${data.limite_maximo.toFixed(2).replace('.', ',')}%`;
-        document.getElementById('limitePrudencialValorLabel').textContent = `${data.limite_prudencial.toFixed(2).replace('.', ',')}%`;
-        document.getElementById('limiteAlertaValorLabel').textContent = `${data.limite_alerta.toFixed(2).replace('.', ',')}%`;
-
-        // Atualizar barra de progresso
-        const percentual = data.percentual_despesa || 0;
-        const progressBar = document.getElementById('progressBar');
-        progressBar.style.width = `${Math.min(percentual, 100)}%`;
-        document.getElementById('despesaAtualPercentual').textContent = `${percentual.toFixed(2).replace('.', ',')}%`;
-
-        // Atualizar RCL e Despesa
-        document.getElementById('rclTotal').textContent = formatCurrency(data.rcl_ajustada, true);
-        document.getElementById('despesaExecutada').textContent = formatCurrency(data.dtp_rcl, true);
-
-        // Atualizar cor da barra
-        updateProgressBarColor(percentual, data.limite_alerta, data.limite_prudencial, data.limite_maximo);
-
-        // Tabela detalhada
-        const tbody = document.getElementById('limitesTableBody');
-        if (tbody) {
-            tbody.innerHTML = `
-                <tr>
-                    <td><strong>Receita Corrente Líquida (RCL)</strong></td>
-                    <td class="text-end valor-monetario valor-positivo">${formatCurrency(data.rcl)}</td>
-                    <td class="text-end">100.00%</td>
-                </tr>
-                <tr>
-                    <td style="padding-left:20px;">(-) Transferências da União - Emendas Individuais</td>
-                    <td class="text-end valor-monetario valor-negativo">${formatCurrency(data.transf_emendas_individuais)}</td>
-                    <td class="text-end">${data.rcl ? formatPercent((data.transf_emendas_individuais / data.rcl) * 100) : '0,00%'}</td>
-                </tr>
-                <tr>
-                    <td style="padding-left:20px;">(-) Transferências da União - Emendas de Bancada</td>
-                    <td class="text-end valor-monetario valor-negativo">${formatCurrency(data.transf_emendas_bancada)}</td>
-                    <td class="text-end">${data.rcl ? formatPercent((data.transf_emendas_bancada / data.rcl) * 100) : '0,00%'}</td>
-                </tr>
-                <tr>
-                    <td style="padding-left:20px;">(-) Transferências ACS/ACE</td>
-                    <td class="text-end valor-monetario valor-negativo">${formatCurrency(data.transf_acs_ace || 0)}</td>
-                    <td class="text-end">${data.rcl ? formatPercent(((data.transf_acs_ace || 0) / data.rcl) * 100) : '0,00%'}</td>
-                </tr>
-                <tr>
-                    <td style="padding-left:20px;">(-) Outras Deduções da RCL</td>
-                    <td class="text-end valor-monetario valor-negativo">${formatCurrency(data.outras_deducoes_rcl || 0)}</td>
-                    <td class="text-end">${data.rcl ? formatPercent(((data.outras_deducoes_rcl || 0) / data.rcl) * 100) : '0,00%'}</td>
-                </tr>
-                <tr class="table-total-row">
-                    <td><strong>RECEITA CORRENTE LÍQUIDA AJUSTADA</strong></td>
-                    <td class="text-end valor-monetario valor-positivo"><strong>${formatCurrency(data.rcl_ajustada)}</strong></td>
-                    <td class="text-end"><strong>100.00%</strong></td>
-                </tr>
-                <tr>
-                    <td><strong>DESPESA TOTAL COM PESSOAL (DTP)</strong></td>
-                    <td class="text-end valor-monetario"><strong>${formatCurrency(data.dtp_rcl)}</strong></td>
-                    <td class="text-end"><strong>${formatPercent(data.percentual_despesa)}</strong></td>
-                </tr>
-                <tr>
-                    <td style="padding-left:20px;">(-) Despesas não executadas orçamentariamente</td>
-                    <td class="text-end valor-monetario valor-negativo">${formatCurrency(data.desp_pessoal_nao_exec || 0)}</td>
-                    <td class="text-end">${data.rcl_ajustada ? formatPercent(((data.desp_pessoal_nao_exec || 0) / data.rcl_ajustada) * 100) : '0,00%'}</td>
-                </tr>
-                <tr>
-                    <td style="padding-left:20px;">(-) Despesas não computadas (art. 19, §1º LRF)</td>
-                    <td class="text-end valor-monetario valor-negativo">${formatCurrency(data.desp_nao_computadas || 0)}</td>
-                    <td class="text-end">${data.rcl_ajustada ? formatPercent(((data.desp_nao_computadas || 0) / data.rcl_ajustada) * 100) : '0,00%'}</td>
-                </tr>
-                <tr>
-                    <td style="padding-left:20px;">(-) Indenizações por demissão</td>
-                    <td class="text-end valor-monetario valor-negativo">${formatCurrency(data.indenizacoes_demissao || 0)}</td>
-                    <td class="text-end">${data.rcl_ajustada ? formatPercent(((data.indenizacoes_demissao || 0) / data.rcl_ajustada) * 100) : '0,00%'}</td>
-                </tr>
-                <tr>
-                    <td style="padding-left:20px;">(-) Decisões judiciais de períodos anteriores</td>
-                    <td class="text-end valor-monetario valor-negativo">${formatCurrency(data.decisoes_judiciais_ant || 0)}</td>
-                    <td class="text-end">${data.rcl_ajustada ? formatPercent(((data.decisoes_judiciais_ant || 0) / data.rcl_ajustada) * 100) : '0,00%'}</td>
-                </tr>
-                <tr>
-                    <td style="padding-left:20px;">(-) Despesas de exercícios anteriores</td>
-                    <td class="text-end valor-monetario valor-negativo">${formatCurrency(data.desp_exercicios_ant || 0)}</td>
-                    <td class="text-end">${data.rcl_ajustada ? formatPercent(((data.desp_exercicios_ant || 0) / data.rcl_ajustada) * 100) : '0,00%'}</td>
-                </tr>
-                <tr>
-                    <td style="padding-left:20px;">(-) Inativos/pensionistas c/ recursos vinculados</td>
-                    <td class="text-end valor-monetario valor-negativo">${formatCurrency(data.inativos_pensionistas_vinc || 0)}</td>
-                    <td class="text-end">${data.rcl_ajustada ? formatPercent(((data.inativos_pensionistas_vinc || 0) / data.rcl_ajustada) * 100) : '0,00%'}</td>
-                </tr>
-                <tr>
-                    <td style="padding-left:20px;">(-) ACS/ACE c/ recursos vinculados</td>
-                    <td class="text-end valor-monetario valor-negativo">${formatCurrency(data.acs_ace_recursos_vinc || 0)}</td>
-                    <td class="text-end">${data.rcl_ajustada ? formatPercent(((data.acs_ace_recursos_vinc || 0) / data.rcl_ajustada) * 100) : '0,00%'}</td>
-                </tr>
-                <tr>
-                    <td style="padding-left:20px;">(-) Outras deduções</td>
-                    <td class="text-end valor-monetario valor-negativo">${formatCurrency(data.outras_deducoes || 0)}</td>
-                    <td class="text-end">${data.rcl_ajustada ? formatPercent(((data.outras_deducoes || 0) / data.rcl_ajustada) * 100) : '0,00%'}</td>
-                </tr>
-                <tr class="table-total-row">
-                    <td><strong>DESPESA LÍQUIDA COM PESSOAL</strong></td>
-                    <td class="text-end valor-monetario"><strong>${formatCurrency(data.despesa_liquida_pessoal || 0)}</strong></td>
-                    <td class="text-end"><strong>${data.rcl_ajustada ? formatPercent(((data.despesa_liquida_pessoal || 0) / data.rcl_ajustada) * 100) : '0,00%'}</strong></td>
-                </tr>
-                <tr>
-                    <td style="padding-left:20px;">Limite Legal (49.00% da RCL Ajustada)</td>
-                    <td class="text-end valor-monetario valor-positivo">${formatCurrency(data.rcl_ajustada * 0.49)}</td>
-                    <td class="text-end">49.00%</td>
-                </tr>
-                <tr>
-                    <td style="padding-left:20px;">Limite Prudencial (46.55% da RCL Ajustada)</td>
-                    <td class="text-end valor-monetario valor-positivo">${formatCurrency(data.rcl_ajustada * 0.4655)}</td>
-                    <td class="text-end">46.55%</td>
-                </tr>
-                <tr>
-                    <td style="padding-left:20px;">Limite de Alerta (44.10% da RCL Ajustada)</td>
-                    <td class="text-end valor-monetario valor-positivo">${formatCurrency(data.rcl_ajustada * 0.441)}</td>
-                    <td class="text-end">44.10%</td>
-                </tr>
-            `;
-        }
-        
-        setTimeout(iframeUpdateHeight, 100);
-    }
-
-    function updateProgressBarColor(percentual, limiteAlerta, limitePrudencial, limiteMaximo) {
-        const bar = document.getElementById('progressBar');
-        const legalCard = document.getElementById('limiteLegalCard');
-        const prudCard = document.getElementById('limitePrudencialCard');
-        const alertCard = document.getElementById('limiteAlertaCard');
-        
-        if (!bar) return;
-        
-        if (percentual <= limiteAlerta) {
-            bar.className = 'progress-bar-limite safe';
-            if (legalCard) legalCard.className = 'limite-card safe';
-            if (prudCard) prudCard.className = 'limite-card safe';
-            if (alertCard) alertCard.className = 'limite-card safe';
-        } else if (percentual <= limitePrudencial) {
-            bar.className = 'progress-bar-limite warning';
-            if (legalCard) legalCard.className = 'limite-card safe';
-            if (prudCard) prudCard.className = 'limite-card warning';
-            if (alertCard) alertCard.className = 'limite-card warning';
-        } else if (percentual <= limiteMaximo) {
-            bar.className = 'progress-bar-limite danger';
-            if (legalCard) legalCard.className = 'limite-card warning';
-            if (prudCard) prudCard.className = 'limite-card danger';
-            if (alertCard) alertCard.className = 'limite-card danger';
-        } else {
-            bar.className = 'progress-bar-limite danger';
-            if (legalCard) legalCard.className = 'limite-card danger';
-            if (prudCard) prudCard.className = 'limite-card danger';
-            if (alertCard) alertCard.className = 'limite-card danger';
         }
     }
 
@@ -2673,8 +2230,7 @@ function formatCurrency(value, compact = false) {
     }).format(value);
 }
 
-
-// ============================================
+ // ============================================
 // RENDERIZAÇÃO DOWNLOADS
 // ============================================
 function renderizarDownloads() {
@@ -2690,11 +2246,11 @@ function renderizarDownloads() {
                         Portal de Dados Abertos
                     </h4>
                     <p class="text-muted text-justify" style="font-size: 13px; text-align: justify;">
-                        Acesse o conjunto de dados completo de Despesa com Pessoal no Portal de Dados Abertos de Minas Gerais, 
+                        Acesse o conjunto de dados completo sobre a despesa de pessoal do Estado de Minas Gerais, 
                         documentados conforme especificações Frictionless Data.
                     </p>
                     <div class="mt-4 text-end">
-                        <a href="https://dados.mg.gov.br/dataset/despesa-pessoal-mg" 
+                        <a href="https://dados.mg.gov.br/dataset/portal_despesa_pessoal" 
                            target="_blank" 
                            class="btn-export text-decoration-none fw-bold d-inline-flex align-items-center justify-content-center px-4 py-2"
                            style="max-width: 100%; width: auto; white-space: nowrap;">
@@ -2845,106 +2401,109 @@ function renderizarDownloads() {
             </div>
         </div>
     `;
-    
-    setTimeout(iframeUpdateHeight, 300);
-}
-// ============================================
-// FUNÇÕES DE DOWNLOAD
-// ============================================
-window.baixarDespesaMensal = function() {
-    const ano = document.getElementById('anoDownloadDespesa')?.value;
-    if (!ano) {
-        alert('Selecione um ano para download');
-        return;
     }
-    
-    if (!window.despesaMensalData || window.despesaMensalData.length === 0) {
-        alert('Dados de despesa mensal não disponíveis');
-        return;
-    }
-    
-    const dadosFiltrados = window.despesaMensalData.filter(item => 
-        item.ano && item.ano.toString() === ano
-    );
-    
-    if (dadosFiltrados.length === 0) {
-        alert(`Nenhum dado encontrado para o ano ${ano}`);
-        return;
-    }
-    
-    const cabecalhos = ['ano', 'mes', 'orgao', 'despesa', 'receita_liquida', 'percentual'];
-    const linhas = dadosFiltrados.map(item => 
-        cabecalhos.map(cab => {
-            let valor = item[cab] !== undefined && item[cab] !== null ? item[cab] : '';
-            return `"${valor.toString().replace(/"/g, '""')}"`;
-        }).join(';')
-    );
-    
-    const csv = [cabecalhos.join(';'), ...linhas].join('\n');
-    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `despesa_pessoal_${ano}.csv`;
-    link.click();
-};
 
-window.baixarLimitesLRF = function() {
-    if (!window.lrfData || window.lrfData.length === 0) {
-        alert('Dados de limites LRF não disponíveis');
-        return;
-    }
-    
-    const cabecalhos = ['periodo', 'limite_legal', 'limite_prudencial', 'limite_alerta_inferior'];
-    const linhas = window.lrfData.map(item => 
-        cabecalhos.map(cab => {
-            let valor = item[cab] !== undefined && item[cab] !== null ? item[cab] : '';
-            return `"${valor.toString().replace(/"/g, '""')}"`;
-        }).join(';')
-    );
-    
-    const csv = [cabecalhos.join(';'), ...linhas].join('\n');
-    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = 'limites_lrf.csv';
-    link.click();
-};
-
-window.baixarTodosDados = function() {
-    if ((!window.despesaMensalData || window.despesaMensalData.length === 0) && 
-        (!window.lrfData || window.lrfData.length === 0)) {
-        alert('Nenhum dado disponível para download');
-        return;
-    }
-    
-    // Criar um objeto combinado
-    const dadosCompletos = {
-        despesa_mensal: window.despesaMensalData || [],
-        limites_lrf: window.lrfData || []
-    };
-    
-    // Converter para JSON e depois para CSV simplificado
-    const jsonStr = JSON.stringify(dadosCompletos, null, 2);
-    const blob = new Blob([jsonStr], { type: 'application/json' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = 'dados_completos.json';
-    link.click();
-};
-
-    // ============================================
-    // FUNÇÕES DE EXPORTAÇÃO
-    // ============================================
-    window.exportarVisaoGeralCSV = function() {
-        const dadosAno = allData[currentDisplayData.ano] || [];
-        if (dadosAno.length === 0) {
-            alert('Nenhum dado disponível para exportação.');
+    window.baixarCSVAno = function() {
+        const selectAno = document.getElementById('anoDownload');
+        if (!selectAno) return;
+        
+        const ano = selectAno.value;
+        
+        if (ano === 'todos') {
+            baixarTodosCSV();
             return;
         }
         
-        let linhas = [];
-        let cabecalhos = ['Descrição', 'Valor (R$)'];
+        if (!ano) {
+            alert('Selecione um ano para download');
+            return;
+        }
         
+        const dadosAno = allData[ano];
+        if (!dadosAno || dadosAno.length === 0) {
+            alert('Nenhum dado encontrado para o ano selecionado.');
+            return;
+        }
+        
+        const cabecalhos = ['mes_referencia', 'despesa_bruta', 'pessoal_ativo', 'vencimentos_vantagens', 
+                           'obrigacoes_patronais', 'inativos_pensionistas', 'aposentadorias', 'pensoes',
+                           'outras_despesas_terceirizacoes', 'desp_pessoal_nao_exec', 'desp_nao_computadas', 
+                           'indenizacoes_demissao', 'decisoes_judiciais_ant', 'desp_exercicios_ant', 
+                           'inativos_pensionistas_vinc', 'acs_ace_recursos_vinc', 'outras_deducoes', 
+                           'despesa_liquida_pessoal'];
+        
+        const linhas = dadosAno.map(item => [
+            `${item.MES}/${item.ANO}`,
+            item.despesa_bruta,
+            item.pessoal_ativo,
+            item.vencimentos_vantagens,
+            item.obrigacoes_patronais,
+            item.inativos_pensionistas,
+            item.aposentadorias,
+            item.pensoes,
+            item.outras_despesas_terceirizacoes || 0,
+            item.desp_pessoal_nao_exec || 0,
+            item.desp_nao_computadas || 0,
+            item.indenizacoes_demissao || 0,
+            item.decisoes_judiciais_ant || 0,
+            item.desp_exercicios_ant || 0,
+            item.inativos_pensionistas_vinc || 0,
+            item.acs_ace_recursos_vinc || 0,
+            item.outras_deducoes || 0,
+            item.despesa_liquida
+        ]);
+        
+        const csvContent = [cabecalhos.join(';'), ...linhas.map(l => l.map(c => `"${String(c).replace(/"/g, '""')}"`).join(';'))].join('\n');
+        const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `despesa_pessoal_${ano}.csv`;
+        link.click();
+    };
+
+    function baixarTodosCSV() {
+        const todosAnos = Object.keys(allData).sort();
+        if (todosAnos.length === 0) {
+            alert('Nenhum dado disponível.');
+            return;
+        }
+        
+        let todasLinhas = [];
+        const cabecalhos = ['ano', 'mes', 'despesa_bruta', 'pessoal_ativo', 'vencimentos_vantagens', 
+                           'obrigacoes_patronais', 'inativos_pensionistas', 'aposentadorias', 'pensoes',
+                           'outras_despesas_terceirizacoes', 'desp_pessoal_nao_exec', 'desp_nao_computadas', 
+                           'indenizacoes_demissao', 'decisoes_judiciais_ant', 'desp_exercicios_ant', 
+                           'inativos_pensionistas_vinc', 'acs_ace_recursos_vinc', 'outras_deducoes', 
+                           'despesa_liquida_pessoal'];
+        
+        todosAnos.forEach(ano => {
+            const dadosAno = allData[ano] || [];
+            dadosAno.forEach(item => {
+                todasLinhas.push([
+                    ano, item.MES, item.despesa_bruta, item.pessoal_ativo, item.vencimentos_vantagens,
+                    item.obrigacoes_patronais, item.inativos_pensionistas, item.aposentadorias, item.pensoes,
+                    item.outras_despesas_terceirizacoes || 0, item.desp_pessoal_nao_exec || 0,
+                    item.desp_nao_computadas || 0, item.indenizacoes_demissao || 0,
+                    item.decisoes_judiciais_ant || 0, item.desp_exercicios_ant || 0,
+                    item.inativos_pensionistas_vinc || 0, item.acs_ace_recursos_vinc || 0,
+                    item.outras_deducoes || 0, item.despesa_liquida
+                ]);
+            });
+        });
+        
+        const csvContent = [cabecalhos.join(';'), ...todasLinhas.map(l => l.map(c => `"${String(c).replace(/"/g, '""')}"`).join(';'))].join('\n');
+        const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'despesa_pessoal_completo.csv';
+        link.click();
+    }
+
+    window.exportarVisaoGeralCSV = function() {
+        const dadosAno = allData[currentDisplayData.ano] || [];
+        if (dadosAno.length === 0) return;
+        
+        let linhas = [];
         if (currentDisplayData.mes) {
             const mesData = dadosAno.find(item => item.MES === currentDisplayData.mes);
             if (mesData) {
@@ -2984,6 +2543,7 @@ window.baixarTodosDados = function() {
             ];
         }
         
+        const cabecalhos = ['Descrição', 'Valor (R$)'];
         const csvContent = [cabecalhos.join(';'), ...linhas.map(l => l.map(c => `"${String(c).replace(/"/g, '""')}"`).join(';'))].join('\n');
         const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement('a');
@@ -3054,10 +2614,7 @@ window.baixarTodosDados = function() {
 
     window.exportarEvolucaoCSV = function() {
         const dadosAno = allData[currentDisplayData.ano] || [];
-        if (dadosAno.length === 0) {
-            alert('Nenhum dado disponível.');
-            return;
-        }
+        if (dadosAno.length === 0) return;
         
         const cabecalhos = ['Mês', 'Despesa Bruta', 'Despesa Líquida', 'Pessoal Ativo', 'Inativos/Pensionistas', 'Variação %'];
         const linhas = dadosAno.map((item, i) => {
@@ -3115,106 +2672,6 @@ window.baixarTodosDados = function() {
         });
         
         doc.save(`evolucao_${currentDisplayData.ano}.pdf`);
-    };
-
-    window.baixarCSVAno = function() {
-        const selectAno = document.getElementById('anoDownload');
-        if (!selectAno || !selectAno.value) {
-            alert('Selecione um ano para baixar.');
-            return;
-        }
-        
-        const ano = selectAno.value;
-        const dadosAno = allData[ano];
-        
-        if (!dadosAno || dadosAno.length === 0) {
-            alert('Nenhum dado encontrado para o ano selecionado.');
-            return;
-        }
-        
-        // Preparar dados para exportação (formato longo)
-        const cabecalhos = ['mes_referencia', 'despesa_bruta', 'pessoal_ativo', 'vencimentos_vantagens', 
-                           'obrigacoes_patronais', 'inativos_pensionistas', 'aposentadorias', 'pensoes',
-                           'desp_pessoal_nao_exec', 'desp_nao_computadas', 'indenizacoes_demissao',
-                           'decisoes_judiciais_ant', 'desp_exercicios_ant', 'inativos_pensionistas_vinc',
-                           'acs_ace_recursos_vinc', 'outras_deducoes', 'despesa_liquida'];
-        
-        const linhas = dadosAno.map(item => {
-            return [
-                `${item.MES}/${item.ANO}`,
-                item.despesa_bruta,
-                item.pessoal_ativo,
-                item.vencimentos_vantagens,
-                item.obrigacoes_patronais,
-                item.inativos_pensionistas,
-                item.aposentadorias,
-                item.pensoes,
-                item.desp_pessoal_nao_exec || 0,
-                item.desp_nao_computadas || 0,
-                item.indenizacoes_demissao || 0,
-                item.decisoes_judiciais_ant || 0,
-                item.desp_exercicios_ant || 0,
-                item.inativos_pensionistas_vinc || 0,
-                item.acs_ace_recursos_vinc || 0,
-                item.outras_deducoes || 0,
-                item.despesa_liquida
-            ];
-        });
-        
-        const csvContent = [cabecalhos.join(';'), ...linhas.map(l => l.map(c => `"${String(c).replace(/"/g, '""')}"`).join(';'))].join('\n');
-        const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = `despesa_pessoal_${ano}.csv`;
-        link.click();
-    };
-
-    window.baixarTodosCSV = function() {
-        const todosAnos = Object.keys(allData).sort();
-        if (todosAnos.length === 0) {
-            alert('Nenhum dado disponível.');
-            return;
-        }
-        
-        let todasLinhas = [];
-        const cabecalhos = ['ano', 'mes', 'despesa_bruta', 'pessoal_ativo', 'vencimentos_vantagens', 
-                           'obrigacoes_patronais', 'inativos_pensionistas', 'aposentadorias', 'pensoes',
-                           'desp_pessoal_nao_exec', 'desp_nao_computadas', 'indenizacoes_demissao',
-                           'decisoes_judiciais_ant', 'desp_exercicios_ant', 'inativos_pensionistas_vinc',
-                           'acs_ace_recursos_vinc', 'outras_deducoes', 'despesa_liquida'];
-        
-        todosAnos.forEach(ano => {
-            const dadosAno = allData[ano] || [];
-            dadosAno.forEach(item => {
-                todasLinhas.push([
-                    ano,
-                    item.MES,
-                    item.despesa_bruta,
-                    item.pessoal_ativo,
-                    item.vencimentos_vantagens,
-                    item.obrigacoes_patronais,
-                    item.inativos_pensionistas,
-                    item.aposentadorias,
-                    item.pensoes,
-                    item.desp_pessoal_nao_exec || 0,
-                    item.desp_nao_computadas || 0,
-                    item.indenizacoes_demissao || 0,
-                    item.decisoes_judiciais_ant || 0,
-                    item.desp_exercicios_ant || 0,
-                    item.inativos_pensionistas_vinc || 0,
-                    item.acs_ace_recursos_vinc || 0,
-                    item.outras_deducoes || 0,
-                    item.despesa_liquida
-                ]);
-            });
-        });
-        
-        const csvContent = [cabecalhos.join(';'), ...todasLinhas.map(l => l.map(c => `"${String(c).replace(/"/g, '""')}"`).join(';'))].join('\n');
-        const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = 'despesa_pessoal_completo.csv';
-        link.click();
     };
 
     // ============================================
