@@ -1,11 +1,10 @@
 {
   "version": "4.16.6",
-  "time": 0.057,
+  "time": 0.071,
   "errors": [],
   "tasks": [
     {
       "resource": {
-        "description": "Insira a descrição/explicação detalhada deste recurso.",
         "dialect": {
           "delimiter": ";"
         },
@@ -96,7 +95,7 @@
           ]
         },
         "scheme": "file",
-        "title": "Insira um título humanamente legível para este recurso.",
+        "title": "Despesa com Pessoal Mensal",
         "stats": {
           "hash": "6f8daa6a52b451549906731b345f2887",
           "bytes": 7454,
@@ -104,7 +103,7 @@
           "rows": 32
         }
       },
-      "time": 0.028,
+      "time": 0.036,
       "scope": [
         "hash-count-error",
         "byte-count-error",
@@ -134,7 +133,6 @@
     },
     {
       "resource": {
-        "description": "Insira a descrição/explicação detalhada deste recurso.",
         "dialect": {
           "delimiter": ";"
         },
@@ -193,7 +191,7 @@
           ]
         },
         "scheme": "file",
-        "title": "Insira um título humanamente legível para este recurso.",
+        "title": "Limites da LRF",
         "stats": {
           "hash": "1cf1d9d1b3a9c9101d8b5e8bf1399f87",
           "bytes": 1066,
@@ -201,7 +199,7 @@
           "rows": 6
         }
       },
-      "time": 0.011,
+      "time": 0.013,
       "scope": [
         "hash-count-error",
         "byte-count-error",
