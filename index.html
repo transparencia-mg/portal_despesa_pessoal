@@ -165,7 +165,7 @@
             box-shadow: 0 0 0 2px rgba(185, 60, 66, 0.15);
         }
 
-        /* ==================== CARDS DE MÉTRICAS ==================== */
+        /* ==================== CARDS DE MÉTRICAS (PADRÃO VISÃO GERAL) ==================== */
         .metric-card {
             background: white;
             border-radius: 8px;
@@ -212,6 +212,57 @@
         .metric-change.warning {
             background-color: rgba(255,193,7,0.1);
             color: var(--warning-yellow);
+        }
+
+        /* ==================== CARD DE LIMITE (NOVO PADRÃO AZUL) ==================== */
+        .limite-card {
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e5e9ef;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
+            overflow: hidden;
+            height: 100%;
+        }
+
+        .limite-header {
+            background: var(--primary-dark);
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            padding: 10px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .limite-body {
+    	    padding: 15px;
+    	    text-align: center; /* CENTRALIZA TODO O CONTEÚDO DO CORPO */
+	}
+
+        .limite-porcentagem {
+            font-size: 32px;
+            font-weight: 600;
+            color: var(--primary-dark);
+        }
+
+        .limite-valor {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--primary-dark);
+        }
+
+        .limite-label {
+            font-size: 12px;
+            color: var(--primary-darker);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .limite-info {
+            font-size: 11px;
+            color: #6c757d;
+            margin-top: 5px;
         }
 
         /* ==================== CONTAINER DE GRÁFICOS ==================== */
@@ -793,6 +844,15 @@
             justify-content: center;
             line-height: 1; 
         }
+
+/* ==================== ESTILO PARA TODOS OS CÓDIGOS ==================== */
+code {
+    color: var(--primary-dark) !important;
+    background-color: transparent !important;
+    font-weight: 500;
+    padding: 0;
+    font-size: inherit;
+}
         
         /* ==================== FILTROS LAYOUT ==================== */
         .filters-row {
@@ -820,24 +880,6 @@
             display: flex;
             gap: 10px;
         }
-
-        /* ==================== CARD DE LIMITE ==================== */
-        .limite-card {
-            text-align: center;
-            padding: 15px;
-            border-radius: 10px;
-            background: white;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
-            border: 1px solid #dee2e6;
-            height: 100%;
-        }
-        .limite-card.safe { border-top: 4px solid var(--success-green); }
-        .limite-card.warning { border-top: 4px solid var(--warning-yellow); }
-        .limite-card.danger { border-top: 4px solid var(--accent-red); }
-        .limite-card .porcentagem { font-size: 24px; font-weight: 700; margin: 8px 0; color: var(--primary-dark); }
-        .limite-card .valor { font-size: 20px; font-weight: 700; color: var(--primary-dark); }
-        .limite-card .label { font-size: 12px; color: var(--primary-darker); text-transform: uppercase; }
-        .limite-info { font-size: 11px; color: #6c757d; margin-top: 5px; }
 
         /* ==================== BARRAS DE PROGRESSO ==================== */
         .progress-limite {
@@ -1204,9 +1246,21 @@
 
     function formatCurrency(value, compact = false) {
         if (isNaN(value) || value === null || value === undefined) return 'R$ 0,00';
-        if (compact && value >= 1e9) return `R$ ${(value / 1e9).toFixed(2).replace('.', ',')} bi`;
-        if (compact && value >= 1e6) return `R$ ${(value / 1e6).toFixed(2).replace('.', ',')} mi`;
-        return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+        
+        // Para valores muito grandes, usar compacto apenas se explicitamente solicitado
+        if (compact) {
+            if (value >= 1e12) return `R$ ${(value / 1e12).toFixed(2).replace('.', ',')} tri`;
+            if (value >= 1e9) return `R$ ${(value / 1e9).toFixed(2).replace('.', ',')} bi`;
+            if (value >= 1e6) return `R$ ${(value / 1e6).toFixed(2).replace('.', ',')} mi`;
+        }
+        
+        // Formatação completa sem abreviação
+        return new Intl.NumberFormat('pt-BR', { 
+            style: 'currency', 
+            currency: 'BRL',
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }).format(value);
     }
 
     function formatPercent(value) {
@@ -1535,20 +1589,20 @@
             <div class="filter-container">
                 <div class="filters-row">
                     <div class="filter-group">
-                        <label class="filter-label"><i class="material-icons">calendar_today</i> ANO</label>
+                        <label class="filter-label"><i class="material-icons"></i> ANO</label>
                         <select class="form-select modern-select" id="filtroAnoVG" onchange="mudarAnoVG()">
                             ${anos.map(ano => `<option value="${ano}" ${ano === currentDisplayData.ano ? 'selected' : ''}>${ano}</option>`).join('')}
                         </select>
                     </div>
                     <div class="filter-group">
-                        <label class="filter-label"><i class="material-icons">date_range</i> PERÍODO</label>
+                        <label class="filter-label"><i class="material-icons"></i> PERÍODO</label>
                         <select class="form-select modern-select" id="filtroPeriodoVG" onchange="mudarPeriodoVG()">
                             <option value="">Anual (acumulado)</option>
                             ${mesesDisponiveis.map(m => `<option value="${m.valor}" ${m.valor === currentDisplayData.mes ? 'selected' : ''}>${m.nome}</option>`).join('')}
                         </select>
                     </div>
                     <div class="filter-buttons-group">
-                        <button class="btn-pesquisa" onclick="aplicarFiltrosVG()"><i class="material-icons me-2">refresh</i> Atualizar</button>
+                        <button class="btn-pesquisa" onclick="aplicarFiltrosVG()"><i class="material-icons me-2"></i> Atualizar</button>
                         <button class="btn-secondary-custom" onclick="limparFiltrosVG()"><i class="material-icons me-2">clear</i> Limpar</button>
                     </div>
                 </div>
@@ -1635,13 +1689,13 @@
                         <tbody>
                             ${dadosTabela.map(item => `
                                 <tr class="${item.isTotal ? 'table-total-row fw-bold' : ''}">
-                                    <td style="padding-left: ${(item.indent || 0) * 20 + 12}px; ${item.isNegative ? 'color: var(--accent-red);' : ''}">
+                                    <td style="padding-left: ${(item.indent || 0) * 20 + 12}px;">
                                         ${item.descricao}
                                     </td>
-                                    <td class="text-end valor-monetario ${item.isNegative ? 'valor-negativo' : ''}">
+                                    <td class="text-end valor-monetario">
                                         ${formatCurrency(item.valor)}
                                     </td>
-                                    <td class="text-end ${item.isNegative ? 'valor-negativo' : ''}">
+                                    <td class="text-end">
                                         ${formatPercent(item.percentual)}
                                     </td>
                                 </tr>
@@ -1820,13 +1874,13 @@
             <div class="filter-container">
                 <div class="filters-row">
                     <div class="filter-group">
-                        <label class="filter-label"><i class="material-icons">calendar_today</i> ANO</label>
+                        <label class="filter-label"><i class="material-icons"></i> ANO</label>
                         <select class="form-select modern-select" id="filtroAnoEvolucao" onchange="mudarAnoEvolucao()">
                             ${anos.map(ano => `<option value="${ano}" ${ano === currentDisplayData.ano ? 'selected' : ''}>${ano}</option>`).join('')}
                         </select>
                     </div>
                     <div class="filter-group">
-                        <label class="filter-label"><i class="material-icons">show_chart</i> CATEGORIA</label>
+                        <label class="filter-label"><i class="material-icons"></i> CATEGORIA</label>
                         <select class="form-select modern-select" id="filtroCategoriaEvolucao" onchange="atualizarGraficoEvolucao()">
                             <option value="bruta">Despesa Bruta</option>
                             <option value="liquida">Despesa Líquida</option>
@@ -2011,7 +2065,7 @@
     };
 
     // ============================================
-    // RENDERIZAÇÃO LIMITES LRF
+    // RENDERIZAÇÃO LIMITES LRF (COM CARDS NO PADRÃO AZUL)
     // ============================================
     function renderizarLimites() {
         const container = document.getElementById('limites-content');
@@ -2023,7 +2077,7 @@
             <div class="filter-container">
                 <div class="filters-row">
                     <div class="filter-group">
-                        <label class="filter-label"><i class="material-icons">date_range</i> PERÍODO DE APURAÇÃO</label>
+                        <label class="filter-label"><i class="material-icons"></i> PERÍODO DE APURAÇÃO</label>
                         <select class="form-select modern-select" id="filtroPeriodoLRF" onchange="atualizarLimitesLRF()">
                             ${periodos.map(p => `<option value="${p}">${p}</option>`).join('')}
                         </select>
@@ -2032,9 +2086,36 @@
             </div>
 
             <div class="row mb-4">
-                <div class="col-md-4"><div class="limite-card safe" id="limiteLegalCard"><div class="label">LIMITE LEGAL</div><div class="porcentagem" id="limiteLegalPercentual">49.00%</div><div class="valor" id="limiteLegalValor">Carregando...</div><div class="limite-info">Máximo permitido (LC 101/2000)</div></div></div>
-                <div class="col-md-4"><div class="limite-card warning" id="limitePrudencialCard"><div class="label">LIMITE PRUDENCIAL</div><div class="porcentagem" id="limitePrudencialPercentual">46.55%</div><div class="valor" id="limitePrudencialValor">Carregando...</div><div class="limite-info">95% do limite legal</div></div></div>
-                <div class="col-md-4"><div class="limite-card danger" id="limiteAlertaCard"><div class="label">LIMITE DE ALERTA</div><div class="porcentagem" id="limiteAlertaPercentual">44.10%</div><div class="valor" id="limiteAlertaValor">Carregando...</div><div class="limite-info">90% do limite legal</div></div></div>
+                <div class="col-md-4">
+                    <div class="limite-card">
+                        <div class="limite-header">LIMITE LEGAL <i class="material-icons" data-bs-toggle="tooltip" title="Máximo permitido (LC 101/2000)"></i></div>
+                        <div class="limite-body">
+                            <div class="limite-porcentagem" id="limiteLegalPercentual">49.00%</div>
+                            <div class="limite-valor" id="limiteLegalValor">Carregando...</div>
+                            <div class="limite-label">49,00% da RCL Ajustada</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="limite-card">
+                        <div class="limite-header">LIMITE PRUDENCIAL <i class="material-icons" data-bs-toggle="tooltip" title="95% do limite legal"></i></div>
+                        <div class="limite-body">
+                            <div class="limite-porcentagem" id="limitePrudencialPercentual">46.55%</div>
+                            <div class="limite-valor" id="limitePrudencialValor">Carregando...</div>
+                            <div class="limite-label">46,55% da RCL Ajustada</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="limite-card">
+                        <div class="limite-header">LIMITE DE ALERTA <i class="material-icons" data-bs-toggle="tooltip" title="90% do limite legal"></i></div>
+                        <div class="limite-body">
+                            <div class="limite-porcentagem" id="limiteAlertaPercentual">44.10%</div>
+                            <div class="limite-valor" id="limiteAlertaValor">Carregando...</div>
+                            <div class="limite-label">44,10% da RCL Ajustada</div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="row mb-4">
@@ -2087,320 +2168,283 @@
         }
     }
 
-// ============================================
-// FUNÇÃO CORRIGIDA - atualizarLimitesLRF
-// ============================================
-window.atualizarLimitesLRF = function() {
-    const select = document.getElementById('filtroPeriodoLRF');
-    if (!select) return;
-    
-    const periodo = select.value;
-    const data = limitesData[periodo];
-    if (!data) return;
-    
-    try {
-        // CORREÇÃO: Os limites são PERCENTUAIS fixos (49%, 46.55%, 44.10%)
-        // e não valores calculados da RCL
-        const limiteLegalPercentual = 49.00;
-        const limitePrudencialPercentual = 46.55;
-        const limiteAlertaPercentual = 44.10;
+    // ============================================
+    // FUNÇÃO CORRIGIDA - atualizarLimitesLRF
+    // ============================================
+    window.atualizarLimitesLRF = function() {
+        const select = document.getElementById('filtroPeriodoLRF');
+        if (!select) return;
         
-        // Atualizar cards de percentuais (agora mostram os percentuais corretos)
-        document.getElementById('limiteLegalPercentual').textContent = `${limiteLegalPercentual.toFixed(2).replace('.', ',')}%`;
-        document.getElementById('limitePrudencialPercentual').textContent = `${limitePrudencialPercentual.toFixed(2).replace('.', ',')}%`;
-        document.getElementById('limiteAlertaPercentual').textContent = `${limiteAlertaPercentual.toFixed(2).replace('.', ',')}%`;
-
-        // CORREÇÃO: Valores em R$ dos limites (calculados corretamente)
-        const limiteLegalValor = data.rcl_ajustada * (limiteLegalPercentual / 100);
-        const limitePrudencialValor = data.rcl_ajustada * (limitePrudencialPercentual / 100);
-        const limiteAlertaValor = data.rcl_ajustada * (limiteAlertaPercentual / 100);
+        const periodo = select.value;
+        const data = limitesData[periodo];
+        if (!data) return;
         
-        document.getElementById('limiteLegalValor').textContent = formatCurrency(limiteLegalValor, false); // SEM compactar para evitar "bi"
-        document.getElementById('limitePrudencialValor').textContent = formatCurrency(limitePrudencialValor, false);
-        document.getElementById('limiteAlertaValor').textContent = formatCurrency(limiteAlertaValor, false);
-
-        // Atualizar labels na barra de progresso (percentuais)
-        document.getElementById('limiteLegalValorLabel').textContent = `${limiteLegalPercentual.toFixed(2).replace('.', ',')}%`;
-        document.getElementById('limitePrudencialValorLabel').textContent = `${limitePrudencialPercentual.toFixed(2).replace('.', ',')}%`;
-        document.getElementById('limiteAlertaValorLabel').textContent = `${limiteAlertaPercentual.toFixed(2).replace('.', ',')}%`;
-
-        // Atualizar barra de progresso
-        const percentual = data.percentual_despesa || 0;
-        document.getElementById('progressBar').style.width = `${Math.min(percentual, 100)}%`;
-        document.getElementById('despesaAtualPercentual').textContent = `${percentual.toFixed(2).replace('.', ',')}% da RCL`;
-
-        // RCL e Despesa (valores em reais, SEM compactação)
-        document.getElementById('rclTotal').textContent = formatCurrency(data.rcl_ajustada, false);
-        document.getElementById('despesaExecutada').textContent = formatCurrency(data.dtp_rcl, false);
-
-        // Atualizar cor da barra
-        updateProgressBarColor(percentual, limiteAlertaPercentual, limitePrudencialPercentual, limiteLegalPercentual);
-
-        // Tabela detalhada
-        const tbody = document.getElementById('limitesTableBody');
-        if (tbody) {
-            tbody.innerHTML = `
-                <tr><td><strong>Receita Corrente Líquida (RCL)</strong></td><td class="text-end valor-monetario valor-positivo">${formatCurrency(data.rcl, false)}</td><td class="text-end">100.00%</td></tr>
-                <tr><td style="padding-left:20px;">(-) Transferências da União - Emendas Individuais</td><td class="text-end valor-monetario valor-negativo">${formatCurrency(data.transf_emendas_individuais, false)}</td><td class="text-end">${data.rcl ? formatPercent((data.transf_emendas_individuais / data.rcl) * 100) : '0,00%'}</td></tr>
-                <tr><td style="padding-left:20px;">(-) Transferências da União - Emendas de Bancada</td><td class="text-end valor-monetario valor-negativo">${formatCurrency(data.transf_emendas_bancada, false)}</td><td class="text-end">${data.rcl ? formatPercent((data.transf_emendas_bancada / data.rcl) * 100) : '0,00%'}</td></tr>
-                <tr><td style="padding-left:20px;">(-) Transferências ACS/ACE</td><td class="text-end valor-monetario valor-negativo">${formatCurrency(data.transf_acs_ace || 0, false)}</td><td class="text-end">${data.rcl ? formatPercent(((data.transf_acs_ace || 0) / data.rcl) * 100) : '0,00%'}</td></tr>
-                <tr><td style="padding-left:20px;">(-) Outras Deduções da RCL</td><td class="text-end valor-monetario valor-negativo">${formatCurrency(data.outras_deducoes_rcl || 0, false)}</td><td class="text-end">${data.rcl ? formatPercent(((data.outras_deducoes_rcl || 0) / data.rcl) * 100) : '0,00%'}</td></tr>
-                <tr class="table-active fw-bold"><td><strong>RECEITA CORRENTE LÍQUIDA AJUSTADA</strong></td><td class="text-end valor-monetario valor-positivo"><strong>${formatCurrency(data.rcl_ajustada, false)}</strong></td><td class="text-end"><strong>100.00%</strong></td></tr>
-                <tr><td><strong>DESPESA TOTAL COM PESSOAL (DTP)</strong></td><td class="text-end valor-monetario"><strong>${formatCurrency(data.dtp_rcl, false)}</strong></td><td class="text-end"><strong>${formatPercent(data.percentual_despesa)}</strong></td></tr>
-                <tr><td style="padding-left:20px;">(-) Despesas não executadas orçamentariamente</td><td class="text-end valor-monetario valor-negativo">${formatCurrency(data.desp_pessoal_nao_exec || 0, false)}</td><td class="text-end">${data.rcl_ajustada ? formatPercent(((data.desp_pessoal_nao_exec || 0) / data.rcl_ajustada) * 100) : '0,00%'}</td></tr>
-                <tr><td style="padding-left:20px;">(-) Despesas não computadas (art. 19, §1º LRF)</td><td class="text-end valor-monetario valor-negativo">${formatCurrency(data.desp_nao_computadas || 0, false)}</td><td class="text-end">${data.rcl_ajustada ? formatPercent(((data.desp_nao_computadas || 0) / data.rcl_ajustada) * 100) : '0,00%'}</td></tr>
-                <tr><td style="padding-left:20px;">(-) Indenizações por demissão</td><td class="text-end valor-monetario valor-negativo">${formatCurrency(data.indenizacoes_demissao || 0, false)}</td><td class="text-end">${data.rcl_ajustada ? formatPercent(((data.indenizacoes_demissao || 0) / data.rcl_ajustada) * 100) : '0,00%'}</td></tr>
-                <tr><td style="padding-left:20px;">(-) Decisões judiciais de períodos anteriores</td><td class="text-end valor-monetario valor-negativo">${formatCurrency(data.decisoes_judiciais_ant || 0, false)}</td><td class="text-end">${data.rcl_ajustada ? formatPercent(((data.decisoes_judiciais_ant || 0) / data.rcl_ajustada) * 100) : '0,00%'}</td></tr>
-                <tr><td style="padding-left:20px;">(-) Despesas de exercícios anteriores</td><td class="text-end valor-monetario valor-negativo">${formatCurrency(data.desp_exercicios_ant || 0, false)}</td><td class="text-end">${data.rcl_ajustada ? formatPercent(((data.desp_exercicios_ant || 0) / data.rcl_ajustada) * 100) : '0,00%'}</td></tr>
-                <tr><td style="padding-left:20px;">(-) Inativos/pensionistas c/ recursos vinculados</td><td class="text-end valor-monetario valor-negativo">${formatCurrency(data.inativos_pensionistas_vinc || 0, false)}</td><td class="text-end">${data.rcl_ajustada ? formatPercent(((data.inativos_pensionistas_vinc || 0) / data.rcl_ajustada) * 100) : '0,00%'}</td></tr>
-                <tr><td style="padding-left:20px;">(-) ACS/ACE c/ recursos vinculados</td><td class="text-end valor-monetario valor-negativo">${formatCurrency(data.acs_ace_recursos_vinc || 0, false)}</td><td class="text-end">${data.rcl_ajustada ? formatPercent(((data.acs_ace_recursos_vinc || 0) / data.rcl_ajustada) * 100) : '0,00%'}</td></tr>
-                <tr><td style="padding-left:20px;">(-) Outras deduções</td><td class="text-end valor-monetario valor-negativo">${formatCurrency(data.outras_deducoes || 0, false)}</td><td class="text-end">${data.rcl_ajustada ? formatPercent(((data.outras_deducoes || 0) / data.rcl_ajustada) * 100) : '0,00%'}</td></tr>
-                <tr class="table-active fw-bold"><td><strong>DESPESA LÍQUIDA COM PESSOAL</strong></td><td class="text-end valor-monetario"><strong>${formatCurrency(data.despesa_liquida_pessoal || 0, false)}</strong></td><td class="text-end"><strong>${data.rcl_ajustada ? formatPercent(((data.despesa_liquida_pessoal || 0) / data.rcl_ajustada) * 100) : '0,00%'}</strong></td></tr>
-                <tr><td style="padding-left:20px;">Limite Legal (49,00% da RCL Ajustada)</td><td class="text-end valor-monetario valor-positivo">${formatCurrency(limiteLegalValor, false)}</td><td class="text-end">49,00%</td></tr>
-                <tr><td style="padding-left:20px;">Limite Prudencial (46,55% da RCL Ajustada)</td><td class="text-end valor-monetario valor-positivo">${formatCurrency(limitePrudencialValor, false)}</td><td class="text-end">46,55%</td></tr>
-                <tr><td style="padding-left:20px;">Limite de Alerta (44,10% da RCL Ajustada)</td><td class="text-end valor-monetario valor-positivo">${formatCurrency(limiteAlertaValor, false)}</td><td class="text-end">44,10%</td></tr>
-            `;
-        }
-        
-        setTimeout(iframeUpdateHeight, 100);
-    } catch (error) {
-        console.error('Erro ao atualizar limites:', error);
-    }
-};
-
-// ============================================
-// FUNÇÃO AUXILIAR - updateProgressBarColor (CORRIGIDA)
-// ============================================
-function updateProgressBarColor(percentual, limiteAlerta, limitePrudencial, limiteMaximo) {
-    const bar = document.getElementById('progressBar');
-    const legalCard = document.getElementById('limiteLegalCard');
-    const prudCard = document.getElementById('limitePrudencialCard');
-    const alertCard = document.getElementById('limiteAlertaCard');
-    
-    if (!bar) return;
-    
-    // Reset classes
-    bar.className = 'progress-bar-limite';
-    if (legalCard) legalCard.className = 'limite-card';
-    if (prudCard) prudCard.className = 'limite-card';
-    if (alertCard) alertCard.className = 'limite-card';
-    
-    if (percentual <= limiteAlerta) {
-        bar.classList.add('safe');
-        if (legalCard) legalCard.classList.add('safe');
-        if (prudCard) prudCard.classList.add('safe');
-        if (alertCard) alertCard.classList.add('safe');
-    } else if (percentual <= limitePrudencial) {
-        bar.classList.add('warning');
-        if (legalCard) legalCard.classList.add('safe');
-        if (prudCard) prudCard.classList.add('warning');
-        if (alertCard) alertCard.classList.add('warning');
-    } else if (percentual <= limiteMaximo) {
-        bar.classList.add('danger');
-        if (legalCard) legalCard.classList.add('warning');
-        if (prudCard) prudCard.classList.add('danger');
-        if (alertCard) alertCard.classList.add('danger');
-    } else {
-        bar.classList.add('danger');
-        if (legalCard) legalCard.classList.add('danger');
-        if (prudCard) prudCard.classList.add('danger');
-        if (alertCard) alertCard.classList.add('danger');
-    }
-}
-
-// ============================================
-// FUNÇÃO formatCurrency CORRIGIDA
-// ============================================
-function formatCurrency(value, compact = false) {
-    if (isNaN(value) || value === null || value === undefined) return 'R$ 0,00';
-    
-    // Para valores muito grandes, usar compacto apenas se explicitamente solicitado
-    if (compact) {
-        if (value >= 1e12) return `R$ ${(value / 1e12).toFixed(2).replace('.', ',')} tri`;
-        if (value >= 1e9) return `R$ ${(value / 1e9).toFixed(2).replace('.', ',')} bi`;
-        if (value >= 1e6) return `R$ ${(value / 1e6).toFixed(2).replace('.', ',')} mi`;
-    }
-    
-    // Formatação completa sem abreviação
-    return new Intl.NumberFormat('pt-BR', { 
-        style: 'currency', 
-        currency: 'BRL',
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-    }).format(value);
-}
-
- // ============================================
-// RENDERIZAÇÃO DOWNLOADS
-// ============================================
-function renderizarDownloads() {
-    const container = document.getElementById('downloads-content');
-    if (!container) return;
-    
-    container.innerHTML = `
-        <div class="row">
-            <div class="col-md-6 mb-3">
-                <div class="card-stats p-4 bg-white rounded shadow-sm h-100">
-                    <h4 class="fw-bold text-start mb-3">
-                        <i class="material-icons me-2"></i> 
-                        Portal de Dados Abertos
-                    </h4>
-                    <p class="text-muted text-justify" style="font-size: 13px; text-align: justify;">
-                        Acesse o conjunto de dados completo sobre a despesa de pessoal do Estado de Minas Gerais, 
-                        documentados conforme especificações Frictionless Data.
-                    </p>
-                    <div class="mt-4 text-end">
-                        <a href="https://dados.mg.gov.br/dataset/portal_despesa_pessoal" 
-                           target="_blank" 
-                           class="btn-export text-decoration-none fw-bold d-inline-flex align-items-center justify-content-center px-4 py-2"
-                           style="max-width: 100%; width: auto; white-space: nowrap;">
-                            <i class="material-icons me-2" style="font-size: 16px;"></i>
-                            Acessar Portal de Dados MG
-                        </a>
-                    </div>
-                </div>
-            </div>
+        try {
+            // CORREÇÃO: Os limites são PERCENTUAIS fixos (49%, 46.55%, 44.10%)
+            // e não valores calculados da RCL
+            const limiteLegalPercentual = 49.00;
+            const limitePrudencialPercentual = 46.55;
+            const limiteAlertaPercentual = 44.10;
             
-            <div class="col-md-6 mb-3">
-                <div class="card-stats p-4 bg-white rounded shadow-sm h-100">
-                    <h4 class="fw-bold text-start mb-3">
-                        <i class="material-icons me-2"></i> 
-                        Relatório de Gestão Fiscal
-                    </h4>
-                    <p class="text-muted text-justify" style="font-size: 13px; text-align: justify;">
-                        Acesse os Relatórios de Gestão Fiscal (RGF) publicados pela Secretaria de Estado da Fazenda, 
-                        com a apuração detalhada dos limites da despesa com pessoal e demonstrativos da Receita Corrente Líquida.
-                    </p>
-                    <div class="mt-4 text-end">
-                        <a href="https://www.fazenda.mg.gov.br/governo/contadoria_geral/gestaofiscal/" 
-                           target="_blank" 
-                           class="btn-export text-decoration-none fw-bold d-inline-block px-4 py-2">
-                            <i class="material-icons me-2" style="font-size: 16px; vertical-align: middle;"></i>
-                            Acessar Portal da Fazenda
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
+            // Atualizar cards de percentuais (agora mostram os percentuais corretos)
+            document.getElementById('limiteLegalPercentual').textContent = `${limiteLegalPercentual.toFixed(2).replace('.', ',')}%`;
+            document.getElementById('limitePrudencialPercentual').textContent = `${limitePrudencialPercentual.toFixed(2).replace('.', ',')}%`;
+            document.getElementById('limiteAlertaPercentual').textContent = `${limiteAlertaPercentual.toFixed(2).replace('.', ',')}%`;
 
-        <div class="row mt-4">
-            <div class="col-12">
-                <div class="table-container">
-                    <div class="table-header">
-                        <span class="table-title">METADADOS - Estrutura de Dados</span>
+            // CORREÇÃO: Valores em R$ dos limites (calculados corretamente)
+            const limiteLegalValor = data.rcl_ajustada * (limiteLegalPercentual / 100);
+            const limitePrudencialValor = data.rcl_ajustada * (limitePrudencialPercentual / 100);
+            const limiteAlertaValor = data.rcl_ajustada * (limiteAlertaPercentual / 100);
+            
+            document.getElementById('limiteLegalValor').textContent = formatCurrency(limiteLegalValor, false); // SEM compactar para evitar "bi"
+            document.getElementById('limitePrudencialValor').textContent = formatCurrency(limitePrudencialValor, false);
+            document.getElementById('limiteAlertaValor').textContent = formatCurrency(limiteAlertaValor, false);
+
+            // Atualizar labels na barra de progresso (percentuais)
+            document.getElementById('limiteLegalValorLabel').textContent = `${limiteLegalPercentual.toFixed(2).replace('.', ',')}%`;
+            document.getElementById('limitePrudencialValorLabel').textContent = `${limitePrudencialPercentual.toFixed(2).replace('.', ',')}%`;
+            document.getElementById('limiteAlertaValorLabel').textContent = `${limiteAlertaPercentual.toFixed(2).replace('.', ',')}%`;
+
+            // Atualizar barra de progresso
+            const percentual = data.percentual_despesa || 0;
+            document.getElementById('progressBar').style.width = `${Math.min(percentual, 100)}%`;
+            document.getElementById('despesaAtualPercentual').textContent = `${percentual.toFixed(2).replace('.', ',')}% da RCL`;
+
+            // RCL e Despesa (valores em reais, SEM compactação)
+            document.getElementById('rclTotal').textContent = formatCurrency(data.rcl_ajustada, false);
+            document.getElementById('despesaExecutada').textContent = formatCurrency(data.dtp_rcl, false);
+
+            // Atualizar cor da barra
+            updateProgressBarColor(percentual, limiteAlertaPercentual, limitePrudencialPercentual, limiteLegalPercentual);
+
+            // Tabela detalhada
+            const tbody = document.getElementById('limitesTableBody');
+            if (tbody) {
+                tbody.innerHTML = `
+                    <tr><td><strong>Receita Corrente Líquida (RCL)</strong></td><td class="text-end valor-monetario valor-positivo">${formatCurrency(data.rcl, false)}</td><td class="text-end">100.00%</td></tr>
+                    <tr><td style="padding-left:20px;">(-) Transferências da União - Emendas Individuais</td><td class="text-end valor-monetario valor-negativo">${formatCurrency(data.transf_emendas_individuais, false)}</td><td class="text-end">${data.rcl ? formatPercent((data.transf_emendas_individuais / data.rcl) * 100) : '0,00%'}</td></tr>
+                    <tr><td style="padding-left:20px;">(-) Transferências da União - Emendas de Bancada</td><td class="text-end valor-monetario valor-negativo">${formatCurrency(data.transf_emendas_bancada, false)}</td><td class="text-end">${data.rcl ? formatPercent((data.transf_emendas_bancada / data.rcl) * 100) : '0,00%'}</td></tr>
+                    <tr><td style="padding-left:20px;">(-) Transferências ACS/ACE</td><td class="text-end valor-monetario valor-negativo">${formatCurrency(data.transf_acs_ace || 0, false)}</td><td class="text-end">${data.rcl ? formatPercent(((data.transf_acs_ace || 0) / data.rcl) * 100) : '0,00%'}</td></tr>
+                    <tr><td style="padding-left:20px;">(-) Outras Deduções da RCL</td><td class="text-end valor-monetario valor-negativo">${formatCurrency(data.outras_deducoes_rcl || 0, false)}</td><td class="text-end">${data.rcl ? formatPercent(((data.outras_deducoes_rcl || 0) / data.rcl) * 100) : '0,00%'}</td></tr>
+                    <tr class="table-active fw-bold"><td><strong>RECEITA CORRENTE LÍQUIDA AJUSTADA</strong></td><td class="text-end valor-monetario valor-positivo"><strong>${formatCurrency(data.rcl_ajustada, false)}</strong></td><td class="text-end"><strong>100.00%</strong></td></tr>
+                    <tr><td><strong>DESPESA TOTAL COM PESSOAL (DTP)</strong></td><td class="text-end valor-monetario"><strong>${formatCurrency(data.dtp_rcl, false)}</strong></td><td class="text-end"><strong>${formatPercent(data.percentual_despesa)}</strong></td></tr>
+                    <tr><td style="padding-left:20px;">(-) Despesas não executadas orçamentariamente</td><td class="text-end valor-monetario valor-negativo">${formatCurrency(data.desp_pessoal_nao_exec || 0, false)}</td><td class="text-end">${data.rcl_ajustada ? formatPercent(((data.desp_pessoal_nao_exec || 0) / data.rcl_ajustada) * 100) : '0,00%'}</td></tr>
+                    <tr><td style="padding-left:20px;">(-) Despesas não computadas (art. 19, §1º LRF)</td><td class="text-end valor-monetario valor-negativo">${formatCurrency(data.desp_nao_computadas || 0, false)}</td><td class="text-end">${data.rcl_ajustada ? formatPercent(((data.desp_nao_computadas || 0) / data.rcl_ajustada) * 100) : '0,00%'}</td></tr>
+                    <tr><td style="padding-left:20px;">(-) Indenizações por demissão</td><td class="text-end valor-monetario valor-negativo">${formatCurrency(data.indenizacoes_demissao || 0, false)}</td><td class="text-end">${data.rcl_ajustada ? formatPercent(((data.indenizacoes_demissao || 0) / data.rcl_ajustada) * 100) : '0,00%'}</td></tr>
+                    <tr><td style="padding-left:20px;">(-) Decisões judiciais de períodos anteriores</td><td class="text-end valor-monetario valor-negativo">${formatCurrency(data.decisoes_judiciais_ant || 0, false)}</td><td class="text-end">${data.rcl_ajustada ? formatPercent(((data.decisoes_judiciais_ant || 0) / data.rcl_ajustada) * 100) : '0,00%'}</td></tr>
+                    <tr><td style="padding-left:20px;">(-) Despesas de exercícios anteriores</td><td class="text-end valor-monetario valor-negativo">${formatCurrency(data.desp_exercicios_ant || 0, false)}</td><td class="text-end">${data.rcl_ajustada ? formatPercent(((data.desp_exercicios_ant || 0) / data.rcl_ajustada) * 100) : '0,00%'}</td></tr>
+                    <tr><td style="padding-left:20px;">(-) Inativos/pensionistas c/ recursos vinculados</td><td class="text-end valor-monetario valor-negativo">${formatCurrency(data.inativos_pensionistas_vinc || 0, false)}</td><td class="text-end">${data.rcl_ajustada ? formatPercent(((data.inativos_pensionistas_vinc || 0) / data.rcl_ajustada) * 100) : '0,00%'}</td></tr>
+                    <tr><td style="padding-left:20px;">(-) ACS/ACE c/ recursos vinculados</td><td class="text-end valor-monetario valor-negativo">${formatCurrency(data.acs_ace_recursos_vinc || 0, false)}</td><td class="text-end">${data.rcl_ajustada ? formatPercent(((data.acs_ace_recursos_vinc || 0) / data.rcl_ajustada) * 100) : '0,00%'}</td></tr>
+                    <tr><td style="padding-left:20px;">(-) Outras deduções</td><td class="text-end valor-monetario valor-negativo">${formatCurrency(data.outras_deducoes || 0, false)}</td><td class="text-end">${data.rcl_ajustada ? formatPercent(((data.outras_deducoes || 0) / data.rcl_ajustada) * 100) : '0,00%'}</td></tr>
+                    <tr class="table-active fw-bold"><td><strong>DESPESA LÍQUIDA COM PESSOAL</strong></td><td class="text-end valor-monetario"><strong>${formatCurrency(data.despesa_liquida_pessoal || 0, false)}</strong></td><td class="text-end"><strong>${data.rcl_ajustada ? formatPercent(((data.despesa_liquida_pessoal || 0) / data.rcl_ajustada) * 100) : '0,00%'}</strong></td></tr>
+                    <tr><td style="padding-left:20px;">Limite Legal (49,00% da RCL Ajustada)</td><td class="text-end valor-monetario valor-positivo">${formatCurrency(limiteLegalValor, false)}</td><td class="text-end">49,00%</td></tr>
+                    <tr><td style="padding-left:20px;">Limite Prudencial (46,55% da RCL Ajustada)</td><td class="text-end valor-monetario valor-positivo">${formatCurrency(limitePrudencialValor, false)}</td><td class="text-end">46,55%</td></tr>
+                    <tr><td style="padding-left:20px;">Limite de Alerta (44,10% da RCL Ajustada)</td><td class="text-end valor-monetario valor-positivo">${formatCurrency(limiteAlertaValor, false)}</td><td class="text-end">44,10%</td></tr>
+                `;
+            }
+            
+            // Reaplicar tooltips
+            document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => new bootstrap.Tooltip(el));
+            
+            setTimeout(iframeUpdateHeight, 100);
+        } catch (error) {
+            console.error('Erro ao atualizar limites:', error);
+        }
+    };
+
+    // ============================================
+    // FUNÇÃO AUXILIAR - updateProgressBarColor (CORRIGIDA)
+    // ============================================
+    function updateProgressBarColor(percentual, limiteAlerta, limitePrudencial, limiteMaximo) {
+        const bar = document.getElementById('progressBar');
+        
+        if (!bar) return;
+        
+        // Reset classes
+        bar.className = 'progress-bar-limite';
+        
+        if (percentual <= limiteAlerta) {
+            bar.classList.add('safe');
+        } else if (percentual <= limitePrudencial) {
+            bar.classList.add('warning');
+        } else if (percentual <= limiteMaximo) {
+            bar.classList.add('danger');
+        } else {
+            bar.classList.add('danger');
+        }
+    }
+
+    // ============================================
+    // RENDERIZAÇÃO DOWNLOADS
+    // ============================================
+    function renderizarDownloads() {
+        const container = document.getElementById('downloads-content');
+        if (!container) return;
+        
+        container.innerHTML = `
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <div class="card-stats p-4 bg-white rounded shadow-sm h-100">
+                        <h4 class="fw-bold text-start mb-3">
+                            <i class="material-icons me-2"></i> 
+                            Portal de Dados Abertos
+                        </h4>
+                        <p class="text-muted text-justify" style="font-size: 13px; text-align: justify;">
+                            Acesse o conjunto de dados completo sobre a despesa de pessoal do Estado de Minas Gerais, 
+                            documentados conforme especificações Frictionless Data.
+                        </p>
+                        <div class="mt-4 text-end">
+                            <a href="https://dados.mg.gov.br/dataset/portal_despesa_pessoal" 
+                               target="_blank" 
+                               class="btn-export text-decoration-none fw-bold d-inline-flex align-items-center justify-content-center px-4 py-2"
+                               style="max-width: 100%; width: auto; white-space: nowrap;">
+                                <i class="material-icons me-2" style="font-size: 16px;"></i>
+                                Acessar Portal de Dados MG
+                            </a>
+                        </div>
                     </div>
-                    <div class="table-responsive">
-                        <table class="table table-bordered">
-                            <thead>
-                                <tr>
-                                    <th>Campo</th>
-                                    <th>Descrição</th>
-                                    <th>Tipo</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td><code>rcl</code></td>
-                                    <td>Receita Corrente Líquida (RCL) do ente, base para cálculo dos limites da LRF</td>
-                                    <td>Número (BRL)</td>
-                                </tr>
-                                <tr>
-                                    <td><code>transf_emendas_individuais</code></td>
-                                    <td>Transferências obrigatórias da União relativas às emendas individuais (art. 166, §1º da CF)</td>
-                                    <td>Número (BRL)</td>
-                                </tr>
-                                <tr>
-                                    <td><code>transf_emendas_bancada</code></td>
-                                    <td>Transferências obrigatórias da União relativas às emendas de bancada (art. 166, §16 da CF)</td>
-                                    <td>Número (BRL)</td>
-                                </tr>
-                                <tr>
-                                    <td><code>transf_acs_ace</code></td>
-                                    <td>Transferências da União para pagamento de agentes comunitários de saúde e de combate às endemias (CF art. 198, §11)</td>
-                                    <td>Número (BRL)</td>
-                                </tr>
-                                <tr>
-                                    <td><code>outras_deducoes_rcl</code></td>
-                                    <td>Outras deduções constitucionais ou legais aplicáveis à RCL</td>
-                                    <td>Número (BRL)</td>
-                                </tr>
-                                <tr>
-                                    <td><code>rcl_ajustada</code></td>
-                                    <td>Receita Corrente Líquida ajustada para cálculo dos limites da despesa com pessoal (RCL - deduções)</td>
-                                    <td>Número (BRL)</td>
-                                </tr>
-                                <tr>
-                                    <td><code>dtp_rcl</code></td>
-                                    <td>Despesa Total com Pessoal em relação à RCL (somatório das despesas com pessoal consideradas)</td>
-                                    <td>Número (BRL)</td>
-                                </tr>
-                                <tr>
-                                    <td><code>limite_maximo</code></td>
-                                    <td>Limite máximo da despesa com pessoal conforme art. 20 da LRF (49% da RCL para o Executivo estadual/municipal)</td>
-                                    <td>Percentual</td>
-                                </tr>
-                                <tr>
-                                    <td><code>limite_prudencial</code></td>
-                                    <td>Limite prudencial da despesa com pessoal (95% do limite máximo, conforme art. 22 da LRF)</td>
-                                    <td>Percentual</td>
-                                </tr>
-                                <tr>
-                                    <td><code>limite_alerta</code></td>
-                                    <td>Limite de alerta da despesa com pessoal (90% do limite máximo, conforme art. 59 da LRF)</td>
-                                    <td>Percentual</td>
-                                </tr>
-                                <tr>
-                                    <td><code>desp_pessoal_nao_exec</code></td>
-                                    <td>Despesa com pessoal não executada orçamentariamente</td>
-                                    <td>Número (BRL)</td>
-                                </tr>
-                                <tr>
-                                    <td><code>desp_nao_computadas</code></td>
-                                    <td>Despesas não computadas para fins de cálculo do limite de pessoal (art. 19, §1º da LRF)</td>
-                                    <td>Número (BRL)</td>
-                                </tr>
-                                <tr>
-                                    <td><code>indenizacoes_demissao</code></td>
-                                    <td>Indenizações por demissão e incentivos à demissão voluntária</td>
-                                    <td>Número (BRL)</td>
-                                </tr>
-                                <tr>
-                                    <td><code>decisoes_judiciais_ant</code></td>
-                                    <td>Despesas decorrentes de decisões judiciais de períodos anteriores ao da apuração</td>
-                                    <td>Número (BRL)</td>
-                                </tr>
-                                <tr>
-                                    <td><code>desp_exercicios_ant</code></td>
-                                    <td>Despesas de exercícios anteriores referentes a períodos anteriores ao da apuração</td>
-                                    <td>Número (BRL)</td>
-                                </tr>
-                                <tr>
-                                    <td><code>inativos_pensionistas_vinc</code></td>
-                                    <td>Despesas com inativos e pensionistas custeadas com recursos vinculados</td>
-                                    <td>Número (BRL)</td>
-                                </tr>
-                                <tr>
-                                    <td><code>acs_ace_recursos_vinc</code></td>
-                                    <td>Despesas com agentes comunitários de saúde e de combate às endemias com recursos vinculados (CF art. 198, §11)</td>
-                                    <td>Número (BRL)</td>
-                                </tr>
-                                <tr>
-                                    <td><code>outras_deducoes</code></td>
-                                    <td>Outras deduções constitucionais ou legais aplicáveis à despesa com pessoal</td>
-                                    <td>Número (BRL)</td>
-                                </tr>
-                                <tr>
-                                    <td><code>despesa_liquida_pessoal</code></td>
-                                    <td>Despesa líquida com pessoal, calculada como (I - II)</td>
-                                    <td>Número (BRL)</td>
-                                </tr>
-                            </tbody>
-                        </table>
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                    <div class="card-stats p-4 bg-white rounded shadow-sm h-100">
+                        <h4 class="fw-bold text-start mb-3">
+                            <i class="material-icons me-2"></i> 
+                            Relatório de Gestão Fiscal
+                        </h4>
+                        <p class="text-muted text-justify" style="font-size: 13px; text-align: justify;">
+                            Acesse os Relatórios de Gestão Fiscal (RGF) publicados pela Secretaria de Estado da Fazenda, 
+                            com a apuração detalhada dos limites da despesa com pessoal e demonstrativos da Receita Corrente Líquida.
+                        </p>
+                        <div class="mt-4 text-end">
+                            <a href="https://www.fazenda.mg.gov.br/governo/contadoria_geral/gestaofiscal/" 
+                               target="_blank" 
+                               class="btn-export text-decoration-none fw-bold d-inline-block px-4 py-2">
+                                <i class="material-icons me-2" style="font-size: 16px; vertical-align: middle;"></i>
+                                Acessar Portal da Fazenda
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    `;
+
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="table-container">
+                        <div class="table-header">
+                            <span class="table-title">METADADOS - Estrutura de Dados</span>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Campo</th>
+                                        <th>Descrição</th>
+                                        <th>Tipo</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><code>rcl</code></td>
+                                        <td>Receita Corrente Líquida (RCL) do ente, base para cálculo dos limites da LRF</td>
+                                        <td>Número (BRL)</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>transf_emendas_individuais</code></td>
+                                        <td>Transferências obrigatórias da União relativas às emendas individuais (art. 166, §1º da CF)</td>
+                                        <td>Número (BRL)</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>transf_emendas_bancada</code></td>
+                                        <td>Transferências obrigatórias da União relativas às emendas de bancada (art. 166, §16 da CF)</td>
+                                        <td>Número (BRL)</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>transf_acs_ace</code></td>
+                                        <td>Transferências da União para pagamento de agentes comunitários de saúde e de combate às endemias (CF art. 198, §11)</td>
+                                        <td>Número (BRL)</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>outras_deducoes_rcl</code></td>
+                                        <td>Outras deduções constitucionais ou legais aplicáveis à RCL</td>
+                                        <td>Número (BRL)</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>rcl_ajustada</code></td>
+                                        <td>Receita Corrente Líquida ajustada para cálculo dos limites da despesa com pessoal (RCL - deduções)</td>
+                                        <td>Número (BRL)</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>dtp_rcl</code></td>
+                                        <td>Despesa Total com Pessoal em relação à RCL (somatório das despesas com pessoal consideradas)</td>
+                                        <td>Número (BRL)</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>limite_maximo</code></td>
+                                        <td>Limite máximo da despesa com pessoal conforme art. 20 da LRF (49% da RCL para o Executivo estadual/municipal)</td>
+                                        <td>Percentual</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>limite_prudencial</code></td>
+                                        <td>Limite prudencial da despesa com pessoal (95% do limite máximo, conforme art. 22 da LRF)</td>
+                                        <td>Percentual</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>limite_alerta</code></td>
+                                        <td>Limite de alerta da despesa com pessoal (90% do limite máximo, conforme art. 59 da LRF)</td>
+                                        <td>Percentual</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>desp_pessoal_nao_exec</code></td>
+                                        <td>Despesa com pessoal não executada orçamentariamente</td>
+                                        <td>Número (BRL)</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>desp_nao_computadas</code></td>
+                                        <td>Despesas não computadas para fins de cálculo do limite de pessoal (art. 19, §1º da LRF)</td>
+                                        <td>Número (BRL)</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>indenizacoes_demissao</code></td>
+                                        <td>Indenizações por demissão e incentivos à demissão voluntária</td>
+                                        <td>Número (BRL)</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>decisoes_judiciais_ant</code></td>
+                                        <td>Despesas decorrentes de decisões judiciais de períodos anteriores ao da apuração</td>
+                                        <td>Número (BRL)</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>desp_exercicios_ant</code></td>
+                                        <td>Despesas de exercícios anteriores referentes a períodos anteriores ao da apuração</td>
+                                        <td>Número (BRL)</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>inativos_pensionistas_vinc</code></td>
+                                        <td>Despesas com inativos e pensionistas custeadas com recursos vinculados</td>
+                                        <td>Número (BRL)</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>acs_ace_recursos_vinc</code></td>
+                                        <td>Despesas com agentes comunitários de saúde e de combate às endemias com recursos vinculados (CF art. 198, §11)</td>
+                                        <td>Número (BRL)</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>outras_deducoes</code></td>
+                                        <td>Outras deduções constitucionais ou legais aplicáveis à despesa com pessoal</td>
+                                        <td>Número (BRL)</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>despesa_liquida_pessoal</code></td>
+                                        <td>Despesa líquida com pessoal, calculada como (I - II)</td>
+                                        <td>Número (BRL)</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
     }
 
     window.baixarCSVAno = function() {
