@@ -431,6 +431,11 @@
                     </button>
                 </li>
                 <li class="nav-item">
+                    <button class="nav-link" id="dicionario-tab" data-bs-toggle="tab" data-bs-target="#dicionario">
+                        <i class="material-icons">menu_book</i>Dicionário de Dados
+                    </button>
+                </li>
+                <li class="nav-item">
                     <button class="nav-link" id="downloads-tab" data-bs-toggle="tab" data-bs-target="#downloads">
                         <i class="material-icons">download</i>Downloads
                     </button>
@@ -456,6 +461,9 @@
             </div>
             <div class="tab-pane fade" id="limites" role="tabpanel">
                 <div id="limites-content"></div>
+            </div>
+            <div class="tab-pane fade" id="dicionario" role="tabpanel">
+                <div id="dicionario-content"></div>
             </div>
             <div class="tab-pane fade" id="downloads" role="tabpanel">
                 <div id="downloads-content"></div>
@@ -672,13 +680,13 @@ function processarDadosDespesa(dados) {
             pensoes:                     parseNumber(row.pensoes),
             outras_despesas_terceirizacoes: parseNumber(row.outras_despesas_terceirizacoes),
             desp_pessoal_nao_exec:       parseNumber(row.desp_pessoal_nao_exec),
-            desp_nao_computadas:         parseNumber(row.desp_nao_computadas),
+            piso_enfermagem:             parseNumber(row.desp_nao_computadas),
             indenizacoes_demissao:       parseNumber(row.indenizacoes_demissao),
             decisoes_judiciais_ant:      parseNumber(row.decisoes_judiciais_ant),
             desp_exercicios_ant:         parseNumber(row.desp_exercicios_ant),
             inativos_pensionistas_vinc:  parseNumber(row.inativos_pensionistas_vinc),
             acs_ace_recursos_vinc:       parseNumber(row.acs_ace_recursos_vinc),
-            acs_ace_recursos_vinc_2:     parseNumber(row.acs_ace_recursos_vinc_2),
+            piso_enfermagem:             parseNumber(row.parcela_dedutivel_equipe_enfermagem),
             outras_deducoes:             parseNumber(row.outras_deducoes),
             despesa_liquida:             parseNumber(row.despesa_liquida_pessoal),
             total_nao_computadas: 0
@@ -686,14 +694,12 @@ function processarDadosDespesa(dados) {
     }).filter(item => item.ANO && item.despesa_bruta > 0);
 
     despesaMensalData.forEach(item => {
-        // Combina as duas variantes do campo ACS/ACE
-        const acsAceTotal = (item.acs_ace_recursos_vinc || 0) + (item.acs_ace_recursos_vinc_2 || 0);
+        const acsAceTotal = (item.acs_ace_recursos_vinc || 0);
         item.acs_ace_total = acsAceTotal;
         item.total_nao_computadas =
-            (item.desp_pessoal_nao_exec || 0) + (item.desp_nao_computadas || 0) +
             (item.indenizacoes_demissao || 0) + (item.decisoes_judiciais_ant || 0) +
             (item.desp_exercicios_ant || 0) + (item.inativos_pensionistas_vinc || 0) +
-            acsAceTotal + (item.outras_deducoes || 0);
+            acsAceTotal + (item.piso_enfermagem || 0) + (item.outras_deducoes || 0);
     });
 
     allData = {};
@@ -805,6 +811,7 @@ function renderizarTodasAbas() {
     renderizarVisaoGeral();
     renderizarEvolucao();
     renderizarLimites();
+    renderizarDicionario();
     renderizarDownloads();
     setTimeout(iframeUpdateHeight, 300);
 }
@@ -822,63 +829,72 @@ function renderizarVisaoGeral() {
     const metrica = currentDisplayData.metrica;
 
     // Dados para tabela detalhada
+    // Regras de percentual:
+    //   - Seção I (Despesa Bruta): % sobre despesa_bruta
+    //   - Seção II (Deduções): % sobre total_nao_computadas (base = II)
+    //   - DESPESA LÍQUIDA: sem percentual (noPercent:true)
     let dadosTabela = [];
     if (currentDisplayData.mes) {
         const mesData = dadosAno.find(item => item.MES === currentDisplayData.mes);
         if (mesData) {
-            const tb = mesData.despesa_bruta || 1;
+            const tb  = mesData.despesa_bruta       || 1;  // base seção I
+            const tii = mesData.total_nao_computadas || 1;  // base seção II
             dadosTabela = [
-                { descricao:'DESPESA BRUTA COM PESSOAL (I)',                          valor: mesData.despesa_bruta,                    percentual: 100,                                        isHeader:true },
-                { descricao:'Pessoal Ativo',                                          valor: mesData.pessoal_ativo,                    percentual: (mesData.pessoal_ativo/tb)*100,              indent:1 },
-                { descricao:'Vencimentos, Vantagens e Outras',                        valor: mesData.vencimentos_vantagens,            percentual: (mesData.vencimentos_vantagens/tb)*100,      indent:2 },
-                { descricao:'Obrigações Patronais',                                   valor: mesData.obrigacoes_patronais,             percentual: (mesData.obrigacoes_patronais/tb)*100,       indent:2 },
-                { descricao:'Pessoal Inativo e Pensionistas',                         valor: mesData.inativos_pensionistas,            percentual: (mesData.inativos_pensionistas/tb)*100,      indent:1 },
-                { descricao:'Aposentadorias, Reservas e Reformas',                    valor: mesData.aposentadorias,                   percentual: (mesData.aposentadorias/tb)*100,             indent:2 },
-                { descricao:'Pensões',                                                valor: mesData.pensoes,                          percentual: (mesData.pensoes/tb)*100,                    indent:2 },
-                { descricao:'Outras Despesas de Pessoal / Terceirizações',            valor: mesData.outras_despesas_terceirizacoes||0, percentual: ((mesData.outras_despesas_terceirizacoes||0)/tb)*100, indent:1 },
-                { descricao:'DESPESAS NÃO COMPUTADAS (II)',                           valor: mesData.total_nao_computadas,             percentual: (mesData.total_nao_computadas/tb)*100,       isNegative:true },
-                { descricao:'(-) Despesas com Pessoal Não Executadas Orçamentariamente', valor: mesData.desp_pessoal_nao_exec||0,     percentual: ((mesData.desp_pessoal_nao_exec||0)/tb)*100, indent:1, isNegative:true },
-                { descricao:'(-) Indenizações por Demissão e Incentivos Voluntários', valor: mesData.indenizacoes_demissao||0,         percentual: ((mesData.indenizacoes_demissao||0)/tb)*100, indent:1, isNegative:true },
-                { descricao:'(-) Decisões Judiciais de Períodos Anteriores',          valor: mesData.decisoes_judiciais_ant||0,        percentual: ((mesData.decisoes_judiciais_ant||0)/tb)*100,indent:1, isNegative:true },
-                { descricao:'(-) Despesas de Exercícios Anteriores',                  valor: mesData.desp_exercicios_ant||0,           percentual: ((mesData.desp_exercicios_ant||0)/tb)*100,   indent:1, isNegative:true },
-                { descricao:'(-) Inativos/Pensionistas c/ Recursos Vinculados',       valor: mesData.inativos_pensionistas_vinc||0,    percentual: ((mesData.inativos_pensionistas_vinc||0)/tb)*100, indent:1, isNegative:true },
-                { descricao:'(-) ACS/ACE c/ Recursos Vinculados',                    valor: mesData.acs_ace_total||0, percentual: ((mesData.acs_ace_total||0)/tb)*100, indent:1, isNegative:true },
-                { descricao:'(-) Outras Deduções',                                   valor: mesData.outras_deducoes||0,               percentual: ((mesData.outras_deducoes||0)/tb)*100,       indent:1, isNegative:true },
-                { descricao:'DESPESA LÍQUIDA COM PESSOAL (I - II)',                   valor: mesData.despesa_liquida,                  percentual: (mesData.despesa_liquida/tb)*100,            isTotal:true }
+                { descricao:'DESPESA BRUTA COM PESSOAL (I)',                             valor: mesData.despesa_bruta,                       percentual: 100,                                             isHeader:true },
+                { descricao:'Pessoal Ativo',                                             valor: mesData.pessoal_ativo,                       percentual: (mesData.pessoal_ativo/tb)*100,                   indent:1 },
+                { descricao:'Vencimentos, Vantagens e Outras',                           valor: mesData.vencimentos_vantagens,               percentual: (mesData.vencimentos_vantagens/tb)*100,           indent:2 },
+                { descricao:'Obrigações Patronais',                                      valor: mesData.obrigacoes_patronais,                percentual: (mesData.obrigacoes_patronais/tb)*100,            indent:2 },
+                { descricao:'Pessoal Inativo e Pensionistas',                            valor: mesData.inativos_pensionistas,               percentual: (mesData.inativos_pensionistas/tb)*100,           indent:1 },
+                { descricao:'Aposentadorias, Reservas e Reformas',                       valor: mesData.aposentadorias,                      percentual: (mesData.aposentadorias/tb)*100,                  indent:2 },
+                { descricao:'Pensões',                                                   valor: mesData.pensoes,                             percentual: (mesData.pensoes/tb)*100,                         indent:2 },
+                { descricao:'Outras Despesas de Pessoal / Terceirizações',               valor: mesData.outras_despesas_terceirizacoes||0,   percentual: ((mesData.outras_despesas_terceirizacoes||0)/tb)*100, indent:1 },
+                { descricao:'Despesas com Pessoal Não Executadas Orçamentariamente',    valor: mesData.desp_pessoal_nao_exec||0,            percentual: ((mesData.desp_pessoal_nao_exec||0)/tb)*100,     indent:1 },
+                { descricao:'DESPESAS NÃO COMPUTADAS (II)',                              valor: mesData.total_nao_computadas,                percentual: 100,                                             isNegative:true, isHeader:true },
+                { descricao:'(-) Indenizações por Demissão e Incentivos Voluntários',    valor: mesData.indenizacoes_demissao||0,            percentual: ((mesData.indenizacoes_demissao||0)/tii)*100,     indent:1, isNegative:true },
+                { descricao:'(-) Decisões Judiciais de Períodos Anteriores',             valor: mesData.decisoes_judiciais_ant||0,           percentual: ((mesData.decisoes_judiciais_ant||0)/tii)*100,    indent:1, isNegative:true },
+                { descricao:'(-) Despesas de Exercícios Anteriores',                     valor: mesData.desp_exercicios_ant||0,              percentual: ((mesData.desp_exercicios_ant||0)/tii)*100,       indent:1, isNegative:true },
+                { descricao:'(-) Inativos/Pensionistas c/ Recursos Vinculados',          valor: mesData.inativos_pensionistas_vinc||0,       percentual: ((mesData.inativos_pensionistas_vinc||0)/tii)*100,indent:1, isNegative:true },
+                { descricao:'(-) ACS/ACE c/ Recursos Vinculados',                        valor: mesData.acs_ace_total||0,                    percentual: ((mesData.acs_ace_total||0)/tii)*100,             indent:1, isNegative:true },
+                { descricao:'(-) Parcela Dedutível ao Piso Salarial da Equipe de Enfermagem', valor: mesData.piso_enfermagem||0,             percentual: ((mesData.piso_enfermagem||0)/tii)*100,           indent:1, isNegative:true },
+                { descricao:'(-) Outras Deduções',                                       valor: mesData.outras_deducoes||0,                  percentual: ((mesData.outras_deducoes||0)/tii)*100,           indent:1, isNegative:true },
+                { descricao:'DESPESA LÍQUIDA COM PESSOAL (I - II)',                      valor: mesData.despesa_liquida,                     noPercent:true,                                              isTotal:true }
             ];
         }
     } else {
-        const tb = metrica.despesaBruta || 1;
-        const totalVenc        = dadosAno.reduce((s, i) => s + i.vencimentos_vantagens, 0);
-        const totalObrig       = dadosAno.reduce((s, i) => s + i.obrigacoes_patronais, 0);
-        const totalAposen      = dadosAno.reduce((s, i) => s + i.aposentadorias, 0);
-        const totalPensoes     = dadosAno.reduce((s, i) => s + i.pensoes, 0);
-        const totalOutrasTerce = dadosAno.reduce((s, i) => s + (i.outras_despesas_terceirizacoes||0), 0);
-        const totalDespNaoExec = dadosAno.reduce((s, i) => s + (i.desp_pessoal_nao_exec||0), 0);
-        const totalIndenizacao = dadosAno.reduce((s, i) => s + (i.indenizacoes_demissao||0), 0);
-        const totalDecisoesJud = dadosAno.reduce((s, i) => s + (i.decisoes_judiciais_ant||0), 0);
-        const totalDespExerc   = dadosAno.reduce((s, i) => s + (i.desp_exercicios_ant||0), 0);
-        const totalInatVinc    = dadosAno.reduce((s, i) => s + (i.inativos_pensionistas_vinc||0), 0);
-        const totalAcsAce      = dadosAno.reduce((s, i) => s + (i.acs_ace_total||0), 0);
-        const totalOutrasDed   = dadosAno.reduce((s, i) => s + (i.outras_deducoes||0), 0);
+        const tb           = metrica.despesaBruta        || 1;
+        const totalVenc    = dadosAno.reduce((s, i) => s + i.vencimentos_vantagens, 0);
+        const totalObrig   = dadosAno.reduce((s, i) => s + i.obrigacoes_patronais, 0);
+        const totalAposen  = dadosAno.reduce((s, i) => s + i.aposentadorias, 0);
+        const totalPensoes = dadosAno.reduce((s, i) => s + i.pensoes, 0);
+        const totalOutrasTerce  = dadosAno.reduce((s, i) => s + (i.outras_despesas_terceirizacoes||0), 0);
+        const totalDespNaoExec  = dadosAno.reduce((s, i) => s + (i.desp_pessoal_nao_exec||0), 0);
+        const totalIndenizacao  = dadosAno.reduce((s, i) => s + (i.indenizacoes_demissao||0), 0);
+        const totalDecisoesJud  = dadosAno.reduce((s, i) => s + (i.decisoes_judiciais_ant||0), 0);
+        const totalDespExerc    = dadosAno.reduce((s, i) => s + (i.desp_exercicios_ant||0), 0);
+        const totalInatVinc     = dadosAno.reduce((s, i) => s + (i.inativos_pensionistas_vinc||0), 0);
+        const totalAcsAce       = dadosAno.reduce((s, i) => s + (i.acs_ace_total||0), 0);
+        const totalPisoEnferm   = dadosAno.reduce((s, i) => s + (i.piso_enfermagem||0), 0);
+        const totalOutrasDed    = dadosAno.reduce((s, i) => s + (i.outras_deducoes||0), 0);
+        const tii = metrica.totalNaoComputadas || 1;  // base seção II
         dadosTabela = [
-            { descricao:'DESPESA BRUTA COM PESSOAL (I)',                          valor: tb,                     percentual: 100,                             isHeader:true },
-            { descricao:'Pessoal Ativo',                                          valor: metrica.pessoalAtivo,   percentual: (metrica.pessoalAtivo/tb)*100,    indent:1 },
-            { descricao:'Vencimentos, Vantagens e Outras',                        valor: totalVenc,              percentual: (totalVenc/tb)*100,              indent:2 },
-            { descricao:'Obrigações Patronais',                                   valor: totalObrig,             percentual: (totalObrig/tb)*100,             indent:2 },
-            { descricao:'Pessoal Inativo e Pensionistas',                         valor: metrica.inativosPensionistas, percentual: (metrica.inativosPensionistas/tb)*100, indent:1 },
-            { descricao:'Aposentadorias, Reservas e Reformas',                    valor: totalAposen,            percentual: (totalAposen/tb)*100,            indent:2 },
-            { descricao:'Pensões',                                                valor: totalPensoes,           percentual: (totalPensoes/tb)*100,           indent:2 },
-            { descricao:'Outras Despesas de Pessoal / Terceirizações',            valor: totalOutrasTerce,       percentual: (totalOutrasTerce/tb)*100,       indent:1 },
-            { descricao:'DESPESAS NÃO COMPUTADAS (II)',                           valor: metrica.totalNaoComputadas, percentual: (metrica.totalNaoComputadas/tb)*100, isNegative:true },
-            { descricao:'(-) Despesas com Pessoal Não Executadas Orçamentariamente', valor: totalDespNaoExec,   percentual: (totalDespNaoExec/tb)*100,       indent:1, isNegative:true },
-            { descricao:'(-) Indenizações por Demissão e Incentivos Voluntários', valor: totalIndenizacao,      percentual: (totalIndenizacao/tb)*100,       indent:1, isNegative:true },
-            { descricao:'(-) Decisões Judiciais de Períodos Anteriores',          valor: totalDecisoesJud,      percentual: (totalDecisoesJud/tb)*100,       indent:1, isNegative:true },
-            { descricao:'(-) Despesas de Exercícios Anteriores',                  valor: totalDespExerc,        percentual: (totalDespExerc/tb)*100,         indent:1, isNegative:true },
-            { descricao:'(-) Inativos/Pensionistas c/ Recursos Vinculados',       valor: totalInatVinc,         percentual: (totalInatVinc/tb)*100,          indent:1, isNegative:true },
-            { descricao:'(-) ACS/ACE c/ Recursos Vinculados',                    valor: totalAcsAce,            percentual: (totalAcsAce/tb)*100,            indent:1, isNegative:true },
-            { descricao:'(-) Outras Deduções',                                   valor: totalOutrasDed,         percentual: (totalOutrasDed/tb)*100,         indent:1, isNegative:true },
-            { descricao:'DESPESA LÍQUIDA COM PESSOAL (I - II)',                   valor: metrica.despesaLiquida, percentual: (metrica.despesaLiquida/tb)*100, isTotal:true }
+            { descricao:'DESPESA BRUTA COM PESSOAL (I)',                             valor: tb,                           percentual: 100,                              isHeader:true },
+            { descricao:'Pessoal Ativo',                                             valor: metrica.pessoalAtivo,         percentual: (metrica.pessoalAtivo/tb)*100,    indent:1 },
+            { descricao:'Vencimentos, Vantagens e Outras',                           valor: totalVenc,                    percentual: (totalVenc/tb)*100,               indent:2 },
+            { descricao:'Obrigações Patronais',                                      valor: totalObrig,                   percentual: (totalObrig/tb)*100,              indent:2 },
+            { descricao:'Pessoal Inativo e Pensionistas',                            valor: metrica.inativosPensionistas, percentual: (metrica.inativosPensionistas/tb)*100, indent:1 },
+            { descricao:'Aposentadorias, Reservas e Reformas',                       valor: totalAposen,                  percentual: (totalAposen/tb)*100,             indent:2 },
+            { descricao:'Pensões',                                                   valor: totalPensoes,                 percentual: (totalPensoes/tb)*100,            indent:2 },
+            { descricao:'Outras Despesas de Pessoal / Terceirizações',               valor: totalOutrasTerce,             percentual: (totalOutrasTerce/tb)*100,        indent:1 },
+            { descricao:'Despesas com Pessoal Não Executadas Orçamentariamente',    valor: totalDespNaoExec,             percentual: (totalDespNaoExec/tb)*100,        indent:1 },
+            { descricao:'DESPESAS NÃO COMPUTADAS (II)',                              valor: metrica.totalNaoComputadas,   percentual: 100,                              isNegative:true, isHeader:true },
+            { descricao:'(-) Indenizações por Demissão e Incentivos Voluntários',    valor: totalIndenizacao,             percentual: (totalIndenizacao/tii)*100,       indent:1, isNegative:true },
+            { descricao:'(-) Decisões Judiciais de Períodos Anteriores',             valor: totalDecisoesJud,             percentual: (totalDecisoesJud/tii)*100,       indent:1, isNegative:true },
+            { descricao:'(-) Despesas de Exercícios Anteriores',                     valor: totalDespExerc,               percentual: (totalDespExerc/tii)*100,         indent:1, isNegative:true },
+            { descricao:'(-) Inativos/Pensionistas c/ Recursos Vinculados',          valor: totalInatVinc,                percentual: (totalInatVinc/tii)*100,          indent:1, isNegative:true },
+            { descricao:'(-) ACS/ACE c/ Recursos Vinculados',                        valor: totalAcsAce,                  percentual: (totalAcsAce/tii)*100,            indent:1, isNegative:true },
+            { descricao:'(-) Parcela Dedutível ao Piso Salarial da Equipe de Enfermagem', valor: totalPisoEnferm,          percentual: (totalPisoEnferm/tii)*100,        indent:1, isNegative:true },
+            { descricao:'(-) Outras Deduções',                                       valor: totalOutrasDed,               percentual: (totalOutrasDed/tii)*100,         indent:1, isNegative:true },
+            { descricao:'DESPESA LÍQUIDA COM PESSOAL (I - II)',                      valor: metrica.despesaLiquida,       noPercent:true,                               isTotal:true }
         ];
     }
 
@@ -900,7 +916,7 @@ function renderizarVisaoGeral() {
             </div>
         </div>
         <div class="botoes-abaixo">
-            <button class="btn-pesquisa" onclick="aplicarFiltrosVG()"><i class="material-icons">search</i> Pesquisar</button>
+            <button class="btn-pesquisa" onclick="aplicarFiltrosVG()"><i class="material-icons">tune</i> Atualizar Filtros</button>
             <button class="btn-secondary-custom" onclick="limparFiltrosVG()"><i class="material-icons">clear</i> Limpar Filtros</button>
         </div>
     </div>
@@ -910,7 +926,7 @@ function renderizarVisaoGeral() {
             <div class="metric-card">
                 <div class="metric-header">Despesa Bruta</div>
                 <div class="metric-body">
-                    <div class="metric-value" style="font-size:16px">${formatCurrency(metrica.despesaBruta, true)}</div>
+                    <div class="metric-value" style="font-size:13px">${formatCurrency(metrica.despesaBruta)}</div>
                     <div class="metric-sublabel">${metrica.periodo}</div>
                 </div>
             </div>
@@ -919,7 +935,7 @@ function renderizarVisaoGeral() {
             <div class="metric-card">
                 <div class="metric-header">Pessoal Ativo</div>
                 <div class="metric-body">
-                    <div class="metric-value" style="font-size:16px">${formatCurrency(metrica.pessoalAtivo, true)}</div>
+                    <div class="metric-value" style="font-size:13px">${formatCurrency(metrica.pessoalAtivo)}</div>
                     <div class="metric-sublabel">${metrica.despesaBruta ? formatPercent((metrica.pessoalAtivo/metrica.despesaBruta)*100) : '0%'} da bruta</div>
                 </div>
             </div>
@@ -928,7 +944,7 @@ function renderizarVisaoGeral() {
             <div class="metric-card">
                 <div class="metric-header">Inativos/Pensionistas</div>
                 <div class="metric-body">
-                    <div class="metric-value" style="font-size:16px">${formatCurrency(metrica.inativosPensionistas, true)}</div>
+                    <div class="metric-value" style="font-size:13px">${formatCurrency(metrica.inativosPensionistas)}</div>
                     <div class="metric-sublabel">${metrica.despesaBruta ? formatPercent((metrica.inativosPensionistas/metrica.despesaBruta)*100) : '0%'} da bruta</div>
                 </div>
             </div>
@@ -937,7 +953,7 @@ function renderizarVisaoGeral() {
             <div class="metric-card">
                 <div class="metric-header">Despesa Líquida</div>
                 <div class="metric-body">
-                    <div class="metric-value" style="font-size:16px">${formatCurrency(metrica.despesaLiquida, true)}</div>
+                    <div class="metric-value" style="font-size:13px">${formatCurrency(metrica.despesaLiquida)}</div>
                     <div class="metric-sublabel">${metrica.despesaBruta ? formatPercent((metrica.despesaLiquida/metrica.despesaBruta)*100) : '0%'} da bruta</div>
                 </div>
             </div>
@@ -979,12 +995,19 @@ function renderizarVisaoGeral() {
                     <th class="text-end">% do Total</th>
                 </tr></thead>
                 <tbody>
-                    ${dadosTabela.map(item => `
-                    <tr class="${item.isTotal?'row-total':item.isHeader?'row-header':item.isNegative?'row-negative':''} ${item.indent===2?'row-indent-2':item.indent===1?'row-indent-1':''}">
-                        <td>${item.descricao}</td>
-                        <td class="text-end valor-monetario">${formatCurrency(item.valor)}</td>
-                        <td class="text-end">${formatPercent(item.percentual)}</td>
-                    </tr>`).join('')}
+                    ${dadosTabela.map(item => {
+                        const rowClass = item.isTotal ? 'row-total'
+                            : (item.isHeader && item.isNegative) ? 'row-header row-negative'
+                            : item.isHeader ? 'row-header'
+                            : item.isNegative ? 'row-negative' : '';
+                        const indentClass = item.indent===2 ? 'row-indent-2' : item.indent===1 ? 'row-indent-1' : '';
+                        const percentCell = item.noPercent ? '<td></td>' : `<td class="text-end">${formatPercent(item.percentual)}</td>`;
+                        return `<tr class="${rowClass} ${indentClass}">
+                            <td>${item.descricao}</td>
+                            <td class="text-end valor-monetario">${formatCurrency(item.valor)}</td>
+                            ${percentCell}
+                        </tr>`;
+                    }).join('')}
                 </tbody>
             </table>
         </div>
@@ -1202,6 +1225,10 @@ function atualizarTabelaEvolucao() {
     if (!tbody) return;
     const dadosAno = allData[currentDisplayData.ano] || [];
     if (!dadosAno.length) { tbody.innerHTML='<tr><td colspan="6" class="text-center text-muted py-3">Nenhum dado encontrado</td></tr>'; return; }
+    const totalBruta    = dadosAno.reduce((s,i) => s + i.despesa_bruta, 0);
+    const totalLiquida  = dadosAno.reduce((s,i) => s + i.despesa_liquida, 0);
+    const totalAtivo    = dadosAno.reduce((s,i) => s + i.pessoal_ativo, 0);
+    const totalInativos = dadosAno.reduce((s,i) => s + i.inativos_pensionistas, 0);
     tbody.innerHTML = dadosAno.map((item, i) => {
         let variacao = '-', varClass = '';
         if (i > 0 && dadosAno[i-1].despesa_bruta > 0) {
@@ -1211,13 +1238,20 @@ function atualizarTabelaEvolucao() {
         }
         return `<tr>
             <td>${monthNames[item.MES]||item.MES}/${item.ANO}</td>
-            <td class="text-end valor-monetario">${formatCurrency(item.despesa_bruta,true)}</td>
-            <td class="text-end valor-monetario">${formatCurrency(item.despesa_liquida,true)}</td>
-            <td class="text-end valor-monetario">${formatCurrency(item.pessoal_ativo,true)}</td>
-            <td class="text-end valor-monetario">${formatCurrency(item.inativos_pensionistas,true)}</td>
+            <td class="text-end valor-monetario">${formatCurrency(item.despesa_bruta)}</td>
+            <td class="text-end valor-monetario">${formatCurrency(item.despesa_liquida)}</td>
+            <td class="text-end valor-monetario">${formatCurrency(item.pessoal_ativo)}</td>
+            <td class="text-end valor-monetario">${formatCurrency(item.inativos_pensionistas)}</td>
             <td class="text-end ${varClass}">${variacao}</td>
         </tr>`;
-    }).join('');
+    }).join('') + `<tr class="table-total-row">
+            <td><strong>TOTAL ${currentDisplayData.ano}</strong></td>
+            <td class="text-end valor-monetario"><strong>${formatCurrency(totalBruta)}</strong></td>
+            <td class="text-end valor-monetario"><strong>${formatCurrency(totalLiquida)}</strong></td>
+            <td class="text-end valor-monetario"><strong>${formatCurrency(totalAtivo)}</strong></td>
+            <td class="text-end valor-monetario"><strong>${formatCurrency(totalInativos)}</strong></td>
+            <td class="text-end">—</td>
+        </tr>`;
     const badge = document.getElementById('badgeEvolucao');
     if (badge) badge.textContent = `${dadosAno.length} meses`;
 }
@@ -1398,14 +1432,6 @@ window.atualizarLimitesLRF = function() {
             <tr class="row-indent-1 row-negative"><td>(-) Outras Deduções da RCL</td><td class="text-end valor-monetario">${formatCurrency(data.outras_deducoes_rcl||0)}</td><td class="text-end">${data.rcl?formatPercent(((data.outras_deducoes_rcl||0)/data.rcl)*100):'0,00%'}</td></tr>
             <tr class="row-total"><td><strong>RECEITA CORRENTE LÍQUIDA AJUSTADA</strong></td><td class="text-end valor-monetario"><strong>${formatCurrency(data.rcl_ajustada)}</strong></td><td class="text-end"><strong>100,00%</strong></td></tr>
             <tr class="row-header"><td><strong>DESPESA TOTAL COM PESSOAL (DTP)</strong></td><td class="text-end valor-monetario"><strong>${formatCurrency(data.dtp_rcl)}</strong></td><td class="text-end"><strong>${formatPercent(data.percentual_despesa)}</strong></td></tr>
-            <tr class="row-indent-1 row-negative"><td>(-) Despesas não executadas orçamentariamente</td><td class="text-end valor-monetario">${formatCurrency(data.desp_pessoal_nao_exec||0)}</td><td class="text-end">${formatPercent(((data.desp_pessoal_nao_exec||0)/rcl)*100)}</td></tr>
-            <tr class="row-indent-1 row-negative"><td>(-) Despesas não computadas (art. 19, §1º LRF)</td><td class="text-end valor-monetario">${formatCurrency(data.desp_nao_computadas||0)}</td><td class="text-end">${formatPercent(((data.desp_nao_computadas||0)/rcl)*100)}</td></tr>
-            <tr class="row-indent-1 row-negative"><td>(-) Indenizações por demissão</td><td class="text-end valor-monetario">${formatCurrency(data.indenizacoes_demissao||0)}</td><td class="text-end">${formatPercent(((data.indenizacoes_demissao||0)/rcl)*100)}</td></tr>
-            <tr class="row-indent-1 row-negative"><td>(-) Decisões judiciais de períodos anteriores</td><td class="text-end valor-monetario">${formatCurrency(data.decisoes_judiciais_ant||0)}</td><td class="text-end">${formatPercent(((data.decisoes_judiciais_ant||0)/rcl)*100)}</td></tr>
-            <tr class="row-indent-1 row-negative"><td>(-) Despesas de exercícios anteriores</td><td class="text-end valor-monetario">${formatCurrency(data.desp_exercicios_ant||0)}</td><td class="text-end">${formatPercent(((data.desp_exercicios_ant||0)/rcl)*100)}</td></tr>
-            <tr class="row-indent-1 row-negative"><td>(-) Inativos/pensionistas c/ recursos vinculados</td><td class="text-end valor-monetario">${formatCurrency(data.inativos_pensionistas_vinc||0)}</td><td class="text-end">${formatPercent(((data.inativos_pensionistas_vinc||0)/rcl)*100)}</td></tr>
-            <tr class="row-indent-1 row-negative"><td>(-) ACS/ACE c/ recursos vinculados</td><td class="text-end valor-monetario">${formatCurrency(data.acs_ace_recursos_vinc||0)}</td><td class="text-end">${formatPercent(((data.acs_ace_recursos_vinc||0)/rcl)*100)}</td></tr>
-            <tr class="row-indent-1 row-negative"><td>(-) Outras deduções</td><td class="text-end valor-monetario">${formatCurrency(data.outras_deducoes||0)}</td><td class="text-end">${formatPercent(((data.outras_deducoes||0)/rcl)*100)}</td></tr>
             <tr class="row-total"><td><strong>DESPESA LÍQUIDA COM PESSOAL</strong></td><td class="text-end valor-monetario"><strong>${formatCurrency(data.despesa_liquida_pessoal||0)}</strong></td><td class="text-end"><strong>${formatPercent(((data.despesa_liquida_pessoal||0)/rcl)*100)}</strong></td></tr>
             <tr class="row-header"><td>Limite Legal (49,00% da RCL Ajustada)</td><td class="text-end valor-monetario valor-positivo">${formatCurrency(vLegal)}</td><td class="text-end">49,00%</td></tr>
             <tr class="row-header"><td>Limite Prudencial (46,55% da RCL Ajustada)</td><td class="text-end valor-monetario valor-positivo">${formatCurrency(vPrudencial)}</td><td class="text-end">46,55%</td></tr>
@@ -1461,66 +1487,162 @@ function renderizarDownloads() {
                 </button>
             </div>
         </div>
-    </div>
-
-    <div class="filter-container">
-        <h5 style="font-size:14px;font-weight:700;color:#20445d;margin-bottom:12px;"><i class="material-icons" style="vertical-align:middle;margin-right:4px;">info</i> Metadados — Dicionário de Variáveis</h5>
-
-        <div class="metadata-container mb-3">
-            <div class="metadata-header"><i class="material-icons me-2" style="vertical-align:middle">person</i> Despesa Pessoal Mensal</div>
-            <div class="table-responsive">
-                <table class="metadata-table">
-                    <thead><tr><th>Campo</th><th>Descrição</th><th>Tipo</th></tr></thead>
-                    <tbody>
-                        <tr><td><code>mes_ano</code></td><td>Mês e ano de referência da despesa (ex: jan-23)</td><td>Texto</td></tr>
-                        <tr><td><code>despesa_bruta_com_pessoal_i</code></td><td>Despesa bruta com pessoal (Grupo I)</td><td>Moeda</td></tr>
-                        <tr><td><code>pessoal_ativo</code></td><td>Despesa com pessoal ativo</td><td>Moeda</td></tr>
-                        <tr><td><code>vencimentos_vantagens_e_outras</code></td><td>Vencimentos, vantagens e outras remunerações</td><td>Moeda</td></tr>
-                        <tr><td><code>obrigacoes_patronais</code></td><td>Contribuições patronais para previdência</td><td>Moeda</td></tr>
-                        <tr><td><code>pessoal_inativo_e_pensionistas</code></td><td>Despesa com inativos e pensionistas</td><td>Moeda</td></tr>
-                        <tr><td><code>aposentadorias_reservas_e_reformas</code></td><td>Aposentadorias, reservas e reformas</td><td>Moeda</td></tr>
-                        <tr><td><code>pensoes</code></td><td>Pensões pagas pelo ente</td><td>Moeda</td></tr>
-                        <tr><td><code>outras_despesas_terceirizacoes</code></td><td>Outras despesas de pessoal e terceirizações</td><td>Moeda</td></tr>
-                        <tr><td><code>desp_pessoal_nao_exec</code></td><td>Despesas com pessoal não executadas orçamentariamente</td><td>Moeda</td></tr>
-                        <tr><td><code>desp_nao_computadas</code></td><td>Despesas não computadas (art. 19, §1º da LRF)</td><td>Moeda</td></tr>
-                        <tr><td><code>indenizacoes_demissao</code></td><td>Indenizações por demissão e incentivos à demissão voluntária</td><td>Moeda</td></tr>
-                        <tr><td><code>decisoes_judiciais_ant</code></td><td>Decisões judiciais de períodos anteriores</td><td>Moeda</td></tr>
-                        <tr><td><code>desp_exercicios_ant</code></td><td>Despesas de exercícios anteriores</td><td>Moeda</td></tr>
-                        <tr><td><code>inativos_pensionistas_vinc</code></td><td>Inativos/pensionistas custeados com recursos vinculados</td><td>Moeda</td></tr>
-                        <tr><td><code>acs_ace_recursos_vinc</code></td><td>ACS/ACE com recursos vinculados (CF art. 198, §11)</td><td>Moeda</td></tr>
-                        <tr><td><code>outras_deducoes</code></td><td>Outras deduções legais aplicáveis à despesa com pessoal</td><td>Moeda</td></tr>
-                        <tr><td><code>despesa_liquida_pessoal</code></td><td>Despesa líquida com pessoal (Bruta - Deduções)</td><td>Moeda</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <div class="metadata-container">
-            <div class="metadata-header"><i class="material-icons me-2" style="vertical-align:middle">balance</i> Limites LRF</div>
-            <div class="table-responsive">
-                <table class="metadata-table">
-                    <thead><tr><th>Campo</th><th>Descrição</th><th>Tipo</th></tr></thead>
-                    <tbody>
-                        <tr><td><code>mes_ano_a_mes_ano</code></td><td>Período de apuração da despesa com pessoal (12 meses)</td><td>Texto</td></tr>
-                        <tr><td><code>rcl</code></td><td>Receita Corrente Líquida do ente</td><td>Moeda</td></tr>
-                        <tr><td><code>transf_emendas_individudais</code></td><td>Transferências obrigatórias - emendas individuais (CF art. 166, §1º)</td><td>Moeda</td></tr>
-                        <tr><td><code>transf_emendas_bancada</code></td><td>Transferências obrigatórias - emendas de bancada (CF art. 166, §16)</td><td>Moeda</td></tr>
-                        <tr><td><code>transf_acs_ace</code></td><td>Transferências para ACS/ACE (CF art. 198, §11)</td><td>Moeda</td></tr>
-                        <tr><td><code>outras_deducoes_rcl</code></td><td>Outras deduções constitucionais ou legais da RCL</td><td>Moeda</td></tr>
-                        <tr><td><code>rcl_ajustada</code></td><td>RCL ajustada (base para cálculo dos limites)</td><td>Moeda</td></tr>
-                        <tr><td><code>dtp_rcl</code></td><td>Despesa Total com Pessoal apurada para fins da LRF</td><td>Moeda</td></tr>
-                        <tr><td><code>limite_maximo</code></td><td>Limite máximo (49% da RCL - art. 20 LRF)</td><td>Percentual</td></tr>
-                        <tr><td><code>limite_prudencial</code></td><td>Limite prudencial (95% do limite máximo - art. 22 LRF)</td><td>Percentual</td></tr>
-                        <tr><td><code>limite_alerta</code></td><td>Limite de alerta (90% do limite máximo - art. 59 LRF)</td><td>Percentual</td></tr>
-                        <tr><td><code>despesa_liquida_pessoal</code></td><td>Despesa líquida com pessoal para fins da LRF</td><td>Moeda</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
     </div>`;
 
     setTimeout(iframeUpdateHeight, 300);
 }
+
+// ============================================================
+// 7b. DICIONÁRIO DE DADOS
+// ============================================================
+const DICIONARIO_CAMPOS = [
+    // Tabela: despesa_pessoal_mensal
+    { campo:'mes_ano',                          descricao:'Mês e ano de referência da despesa (ex: jan-23)',                                          tipo:'Texto',      tabela:'despesa_pessoal_mensal' },
+    { campo:'despesa_bruta_com_pessoal_i',      descricao:'Despesa bruta total com pessoal — Grupo I (soma de todas as categorias antes das deduções)',tipo:'Moeda (R$)', tabela:'despesa_pessoal_mensal' },
+    { campo:'pessoal_ativo',                    descricao:'Despesa total com pessoal ativo em exercício',                                             tipo:'Moeda (R$)', tabela:'despesa_pessoal_mensal' },
+    { campo:'vencimentos_vantagens_e_outras',   descricao:'Vencimentos, vantagens fixas e outras remunerações do pessoal ativo',                     tipo:'Moeda (R$)', tabela:'despesa_pessoal_mensal' },
+    { campo:'obrigacoes_patronais',             descricao:'Contribuições previdenciárias patronais devidas pelo ente',                               tipo:'Moeda (R$)', tabela:'despesa_pessoal_mensal' },
+    { campo:'pessoal_inativo_e_pensionistas',   descricao:'Despesa total com servidores inativos e pensionistas',                                    tipo:'Moeda (R$)', tabela:'despesa_pessoal_mensal' },
+    { campo:'aposentadorias_reservas_e_reformas',descricao:'Proventos de aposentadoria, reserva remunerada e reforma',                              tipo:'Moeda (R$)', tabela:'despesa_pessoal_mensal' },
+    { campo:'pensoes',                          descricao:'Pensões por morte pagas pelo ente público',                                               tipo:'Moeda (R$)', tabela:'despesa_pessoal_mensal' },
+    { campo:'outras_despesas_terceirizacoes',   descricao:'Outras despesas de pessoal decorrentes de terceirizações substitutas de cargos',          tipo:'Moeda (R$)', tabela:'despesa_pessoal_mensal' },
+    { campo:'desp_pessoal_nao_exec',            descricao:'Despesas com pessoal não executadas orçamentariamente (pagas via precatórios, por exemplo)',tipo:'Moeda (R$)',tabela:'despesa_pessoal_mensal' },
+    { campo:'parcela_dedutivel_equipe_enfermagem', descricao:'Parcela dedutível ao piso salarial da equipe de Enfermagem (Lei 14.434/2022)',       tipo:'Moeda (R$)', tabela:'despesa_pessoal_mensal' },
+    { campo:'indenizacoes_demissao',            descricao:'Indenizações por demissão e incentivos à demissão voluntária (dedução LRF)',              tipo:'Moeda (R$)', tabela:'despesa_pessoal_mensal' },
+    { campo:'decisoes_judiciais_ant',           descricao:'Despesas decorrentes de decisões judiciais referentes a períodos anteriores',             tipo:'Moeda (R$)', tabela:'despesa_pessoal_mensal' },
+    { campo:'desp_exercicios_ant',              descricao:'Despesas de exercícios anteriores inscritas em restos a pagar',                           tipo:'Moeda (R$)', tabela:'despesa_pessoal_mensal' },
+    { campo:'inativos_pensionistas_vinc',       descricao:'Inativos e pensionistas custeados com recursos de fundos vinculados (dedução LRF)',       tipo:'Moeda (R$)', tabela:'despesa_pessoal_mensal' },
+    { campo:'acs_ace_recursos_vinc',            descricao:'ACS/ACE com recursos vinculados — CF art. 198, §11 (dedução LRF)',                        tipo:'Moeda (R$)', tabela:'despesa_pessoal_mensal' },
+    { campo:'outras_deducoes',                  descricao:'Outras deduções legais aplicáveis à despesa com pessoal para fins da LRF',                tipo:'Moeda (R$)', tabela:'despesa_pessoal_mensal' },
+    { campo:'despesa_liquida_pessoal',          descricao:'Despesa líquida com pessoal = Despesa Bruta (I) – Despesas Não Computadas (II)',          tipo:'Moeda (R$)', tabela:'despesa_pessoal_mensal' },
+    // Tabela: limites_lrf
+    { campo:'mes_ano_a_mes_ano',                descricao:'Período de apuração dos limites LRF no formato "mês/ano a mês/ano" (ex: jan/2024 a dez/2024)',tipo:'Texto', tabela:'limites_lrf' },
+    { campo:'rcl',                              descricao:'Receita Corrente Líquida total do ente no período de apuração',                           tipo:'Moeda (R$)', tabela:'limites_lrf' },
+    { campo:'transf_emendas_individudais',      descricao:'Transferências da União decorrentes de emendas parlamentares individuais (dedução da RCL)',tipo:'Moeda (R$)',tabela:'limites_lrf' },
+    { campo:'transf_emendas_bancada',           descricao:'Transferências da União decorrentes de emendas de bancada estadual (dedução da RCL)',     tipo:'Moeda (R$)', tabela:'limites_lrf' },
+    { campo:'transf_acs_ace',                   descricao:'Transferências destinadas a ACS/ACE — CF art. 198, §11 (dedução da RCL)',                 tipo:'Moeda (R$)', tabela:'limites_lrf' },
+    { campo:'outras_deducoes_rcl',              descricao:'Outras deduções constitucionais ou legais da Receita Corrente Líquida',                   tipo:'Moeda (R$)', tabela:'limites_lrf' },
+    { campo:'rcl_ajustada',                     descricao:'RCL ajustada = RCL – deduções; base de cálculo para os limites do art. 20 da LRF',       tipo:'Moeda (R$)', tabela:'limites_lrf' },
+    { campo:'dtp_rcl',                          descricao:'Despesa Total com Pessoal (DTP) apurada para fins de verificação dos limites da LRF',     tipo:'Moeda (R$)', tabela:'limites_lrf' },
+    { campo:'limite_maximo',                    descricao:'Limite máximo de despesa com pessoal — 49% da RCL Ajustada (art. 20 da LRF)',            tipo:'Percentual', tabela:'limites_lrf' },
+    { campo:'limite_prudencial',                descricao:'Limite prudencial — 95% do limite máximo = 46,55% da RCL Ajustada (art. 22 da LRF)',     tipo:'Percentual', tabela:'limites_lrf' },
+    { campo:'limite_alerta',                    descricao:'Limite de alerta — 90% do limite máximo = 44,10% da RCL Ajustada (art. 59, §1º da LRF)',tipo:'Percentual', tabela:'limites_lrf' },
+    { campo:'despesa_liquida_pessoal',          descricao:'Despesa líquida com pessoal para fins dos limites da LRF (DTP – deduções do art. 19 §1º)',tipo:'Moeda (R$)',tabela:'limites_lrf' },
+];
+
+function renderizarDicionario() {
+    const container = document.getElementById('dicionario-content');
+    if (!container) return;
+
+    const tiposBadge = {
+        'Texto':      'background:#e0f0ff;color:#0f5189;',
+        'Moeda (R$)': 'background:#e6f4ea;color:#1a6633;',
+        'Percentual': 'background:#fff3cd;color:#7d5a00;',
+    };
+
+    container.innerHTML = `
+    <div class="filter-container">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
+            <i class="material-icons" style="font-size:26px;color:#20445d;">menu_book</i>
+            <div>
+                <h5 style="font-size:14px;font-weight:700;color:#20445d;margin:0;">Dicionário de Dados</h5>
+                <p style="font-size:12px;color:#6c757d;margin:2px 0 0;">Descrição técnica de todos os campos das bases de dados de Despesa com Pessoal</p>
+            </div>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+            <div style="flex:1;min-width:220px;position:relative;">
+                <i class="material-icons" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#94a3b8;font-size:18px;pointer-events:none;">search</i>
+                <input type="text" id="dicSearchInput" placeholder="Pesquisar campo, descrição ou tabela..." oninput="filtrarDicionario()"
+                    style="width:100%;padding:9px 12px 9px 34px;border:1.5px solid #dfe5ec;border-radius:8px;font-size:13px;font-family:'Montserrat',sans-serif;outline:none;transition:border-color .2s;"
+                    onfocus="this.style.borderColor='#1a3a5c'" onblur="this.style.borderColor='#dfe5ec'">
+            </div>
+            <select id="dicFiltroTabela" onchange="filtrarDicionario()" style="padding:9px 12px;border:1.5px solid #dfe5ec;border-radius:8px;font-size:13px;font-family:'Montserrat',sans-serif;outline:none;background:#fff;cursor:pointer;">
+                <option value="">Todas as tabelas</option>
+                <option value="despesa_pessoal_mensal">despesa_pessoal_mensal</option>
+                <option value="limites_lrf">limites_lrf</option>
+            </select>
+            <select id="dicFiltroTipo" onchange="filtrarDicionario()" style="padding:9px 12px;border:1.5px solid #dfe5ec;border-radius:8px;font-size:13px;font-family:'Montserrat',sans-serif;outline:none;background:#fff;cursor:pointer;">
+                <option value="">Todos os tipos</option>
+                <option value="Texto">Texto</option>
+                <option value="Moeda (R$)">Moeda (R$)</option>
+                <option value="Percentual">Percentual</option>
+            </select>
+            <span id="dicContador" style="font-size:12px;color:#64748b;white-space:nowrap;"></span>
+        </div>
+    </div>
+
+    <div class="metadata-container mb-3">
+        <div class="metadata-header" style="display:flex;justify-content:space-between;align-items:center;">
+            <span><i class="material-icons me-2" style="vertical-align:middle">table_chart</i> Campos das Bases de Dados</span>
+        </div>
+        <div class="table-responsive">
+            <table class="metadata-table" id="dicTabela">
+                <thead>
+                    <tr>
+                        <th style="min-width:220px;cursor:pointer;" onclick="ordenarDicionario('campo')">Campo <i class="material-icons" style="font-size:12px;vertical-align:middle;" id="sort-campo">unfold_more</i></th>
+                        <th style="min-width:320px;">Descrição</th>
+                        <th style="min-width:110px;cursor:pointer;" onclick="ordenarDicionario('tipo')">Tipo <i class="material-icons" style="font-size:12px;vertical-align:middle;" id="sort-tipo">unfold_more</i></th>
+                        <th style="min-width:200px;cursor:pointer;" onclick="ordenarDicionario('tabela')">Tabela Correspondente <i class="material-icons" style="font-size:12px;vertical-align:middle;" id="sort-tabela">unfold_more</i></th>
+                    </tr>
+                </thead>
+                <tbody id="dicTbody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div style="display:flex;justify-content:flex-end;margin-top:12px;">
+        <button class="btn-topo" onclick="voltarAoTopo()"><i class="material-icons">arrow_upward</i> Voltar ao topo</button>
+    </div>`;
+
+    renderizarLinhasDicionario(DICIONARIO_CAMPOS);
+    setTimeout(iframeUpdateHeight, 300);
+}
+
+let dicSortCol = '', dicSortDir = 1;
+
+function renderizarLinhasDicionario(dados) {
+    const tiposBadge = {
+        'Texto':      'background:#e0f0ff;color:#0f5189;',
+        'Moeda (R$)': 'background:#e6f4ea;color:#1a6633;',
+        'Percentual': 'background:#fff3cd;color:#7d5a00;',
+    };
+    const tbody = document.getElementById('dicTbody');
+    if (!tbody) return;
+    const contador = document.getElementById('dicContador');
+    if (contador) contador.textContent = `${dados.length} campo${dados.length!==1?'s':''}`;
+    tbody.innerHTML = dados.map(item => `
+        <tr>
+            <td><code>${item.campo}</code></td>
+            <td style="font-size:12px;color:#334155;">${item.descricao}</td>
+            <td><span style="display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;${tiposBadge[item.tipo]||''}">${item.tipo}</span></td>
+            <td><code style="background:#f0eaff;color:#3b0f8c;">${item.tabela}</code></td>
+        </tr>`).join('');
+}
+
+window.filtrarDicionario = function() {
+    const termo = (document.getElementById('dicSearchInput')?.value || '').toLowerCase();
+    const tabela = document.getElementById('dicFiltroTabela')?.value || '';
+    const tipo   = document.getElementById('dicFiltroTipo')?.value   || '';
+    let filtrado = DICIONARIO_CAMPOS.filter(item => {
+        const matchBusca = !termo || item.campo.toLowerCase().includes(termo) || item.descricao.toLowerCase().includes(termo) || item.tabela.toLowerCase().includes(termo);
+        const matchTabela = !tabela || item.tabela === tabela;
+        const matchTipo   = !tipo   || item.tipo === tipo;
+        return matchBusca && matchTabela && matchTipo;
+    });
+    if (dicSortCol) filtrado = filtrado.slice().sort((a,b)=>dicSortDir*(a[dicSortCol]>b[dicSortCol]?1:-1));
+    renderizarLinhasDicionario(filtrado);
+};
+
+window.ordenarDicionario = function(col) {
+    if (dicSortCol === col) dicSortDir = -dicSortDir; else { dicSortCol = col; dicSortDir = 1; }
+    ['campo','tipo','tabela'].forEach(c => {
+        const el = document.getElementById('sort-'+c);
+        if (el) el.textContent = c===col ? (dicSortDir===1?'arrow_downward':'arrow_upward') : 'unfold_more';
+    });
+    filtrarDicionario();
+};
+
+
 
 // ============================================================
 // 8. EXPORTAÇÕES
