@@ -1,6 +1,6 @@
 {
   "version": "4.16.6",
-  "time": 0.094,
+  "time": 0.083,
   "errors": [],
   "tasks": [
     {
@@ -81,7 +81,7 @@
               "type": "number"
             },
             {
-              "name": "acs_ace_recursos_vinc_2",
+              "name": "parcela_dedutivel_equipe_enfermagem",
               "type": "number"
             },
             {
@@ -103,7 +103,7 @@
           "rows": 48
         }
       },
-      "time": 0.042,
+      "time": 0.037,
       "scope": [
         "hash-count-error",
         "byte-count-error",
@@ -204,46 +204,6 @@
           ],
           "note": "",
           "message": "Label \"outras_despesas_terceirizacoes\" in field outras_despesas_terceirizacao at position \"9\" does not match the field name in the schema",
-          "description": "One of the data source header does not match the field name defined in the schema."
-        },
-        {
-          "label": "parcela_dedutivel_equipe_enfermagem",
-          "fieldName": "acs_ace_recursos_vinc_2",
-          "fieldNumber": 17,
-          "fieldPosition": 17,
-          "labels": [
-            "mes_ano",
-            "despesa_bruta_com_pessoal_i",
-            "pessoal_ativo",
-            "vencimentos_vantagens_e_outras",
-            "obrigacoes_patronais",
-            "pessoal_inativo_e_pensionistas",
-            "aposentadorias_reservas_e_reformas",
-            "pensoes",
-            "outras_despesas_terceirizacoes",
-            "desp_pessoal_nao_exec",
-            "desp_nao_computadas",
-            "indenizacoes_demissao",
-            "decisoes_judiciais_ant",
-            "desp_exercicios_ant",
-            "inativos_pensionistas_vinc",
-            "acs_ace_recursos_vinc",
-            "parcela_dedutivel_equipe_enfermagem",
-            "outras_deducoes",
-            "despesa_liquida_pessoal"
-          ],
-          "rowPositions": [
-            1
-          ],
-          "code": "incorrect-label",
-          "name": "Incorrect Label",
-          "tags": [
-            "#table",
-            "#header",
-            "#label"
-          ],
-          "note": "",
-          "message": "Label \"parcela_dedutivel_equipe_enfermagem\" in field acs_ace_recursos_vinc_2 at position \"17\" does not match the field name in the schema",
           "description": "One of the data source header does not match the field name defined in the schema."
         },
         {
@@ -794,7 +754,7 @@
         },
         {
           "cell": " -   ",
-          "fieldName": "acs_ace_recursos_vinc_2",
+          "fieldName": "parcela_dedutivel_equipe_enfermagem",
           "fieldNumber": 17,
           "fieldPosition": 17,
           "cells": [
@@ -828,7 +788,7 @@
             "#cell"
           ],
           "note": "type is \"number/default\"",
-          "message": "Type error in the cell \" -   \" in row \"2\" and field \"acs_ace_recursos_vinc_2\" at position \"17\": type is \"number/default\"",
+          "message": "Type error in the cell \" -   \" in row \"2\" and field \"parcela_dedutivel_equipe_enfermagem\" at position \"17\": type is \"number/default\"",
           "description": "The value does not match the schema type and format for this field."
         },
         {
@@ -1457,7 +1417,7 @@
         },
         {
           "cell": " -   ",
-          "fieldName": "acs_ace_recursos_vinc_2",
+          "fieldName": "parcela_dedutivel_equipe_enfermagem",
           "fieldNumber": 17,
           "fieldPosition": 17,
           "cells": [
@@ -1491,7 +1451,7 @@
             "#cell"
           ],
           "note": "type is \"number/default\"",
-          "message": "Type error in the cell \" -   \" in row \"3\" and field \"acs_ace_recursos_vinc_2\" at position \"17\": type is \"number/default\"",
+          "message": "Type error in the cell \" -   \" in row \"3\" and field \"parcela_dedutivel_equipe_enfermagem\" at position \"17\": type is \"number/default\"",
           "description": "The value does not match the schema type and format for this field."
         },
         {
@@ -2081,7 +2041,7 @@
         },
         {
           "cell": " -   ",
-          "fieldName": "acs_ace_recursos_vinc_2",
+          "fieldName": "parcela_dedutivel_equipe_enfermagem",
           "fieldNumber": 17,
           "fieldPosition": 17,
           "cells": [
@@ -2115,7 +2075,7 @@
             "#cell"
           ],
           "note": "type is \"number/default\"",
-          "message": "Type error in the cell \" -   \" in row \"4\" and field \"acs_ace_recursos_vinc_2\" at position \"17\": type is \"number/default\"",
+          "message": "Type error in the cell \" -   \" in row \"4\" and field \"parcela_dedutivel_equipe_enfermagem\" at position \"17\": type is \"number/default\"",
           "description": "The value does not match the schema type and format for this field."
         },
         {
@@ -2705,7 +2665,7 @@
         },
         {
           "cell": " -   ",
-          "fieldName": "acs_ace_recursos_vinc_2",
+          "fieldName": "parcela_dedutivel_equipe_enfermagem",
           "fieldNumber": 17,
           "fieldPosition": 17,
           "cells": [
@@ -2739,7 +2699,7 @@
             "#cell"
           ],
           "note": "type is \"number/default\"",
-          "message": "Type error in the cell \" -   \" in row \"5\" and field \"acs_ace_recursos_vinc_2\" at position \"17\": type is \"number/default\"",
+          "message": "Type error in the cell \" -   \" in row \"5\" and field \"parcela_dedutivel_equipe_enfermagem\" at position \"17\": type is \"number/default\"",
           "description": "The value does not match the schema type and format for this field."
         },
         {
@@ -3368,7 +3328,7 @@
         },
         {
           "cell": " -   ",
-          "fieldName": "acs_ace_recursos_vinc_2",
+          "fieldName": "parcela_dedutivel_equipe_enfermagem",
           "fieldNumber": 17,
           "fieldPosition": 17,
           "cells": [
@@ -3402,7 +3362,7 @@
             "#cell"
           ],
           "note": "type is \"number/default\"",
-          "message": "Type error in the cell \" -   \" in row \"6\" and field \"acs_ace_recursos_vinc_2\" at position \"17\": type is \"number/default\"",
+          "message": "Type error in the cell \" -   \" in row \"6\" and field \"parcela_dedutivel_equipe_enfermagem\" at position \"17\": type is \"number/default\"",
           "description": "The value does not match the schema type and format for this field."
         },
         {
@@ -4031,7 +3991,7 @@
         },
         {
           "cell": " -   ",
-          "fieldName": "acs_ace_recursos_vinc_2",
+          "fieldName": "parcela_dedutivel_equipe_enfermagem",
           "fieldNumber": 17,
           "fieldPosition": 17,
           "cells": [
@@ -4065,7 +4025,7 @@
             "#cell"
           ],
           "note": "type is \"number/default\"",
-          "message": "Type error in the cell \" -   \" in row \"7\" and field \"acs_ace_recursos_vinc_2\" at position \"17\": type is \"number/default\"",
+          "message": "Type error in the cell \" -   \" in row \"7\" and field \"parcela_dedutivel_equipe_enfermagem\" at position \"17\": type is \"number/default\"",
           "description": "The value does not match the schema type and format for this field."
         },
         {
@@ -4694,7 +4654,7 @@
         },
         {
           "cell": " -   ",
-          "fieldName": "acs_ace_recursos_vinc_2",
+          "fieldName": "parcela_dedutivel_equipe_enfermagem",
           "fieldNumber": 17,
           "fieldPosition": 17,
           "cells": [
@@ -4728,7 +4688,7 @@
             "#cell"
           ],
           "note": "type is \"number/default\"",
-          "message": "Type error in the cell \" -   \" in row \"8\" and field \"acs_ace_recursos_vinc_2\" at position \"17\": type is \"number/default\"",
+          "message": "Type error in the cell \" -   \" in row \"8\" and field \"parcela_dedutivel_equipe_enfermagem\" at position \"17\": type is \"number/default\"",
           "description": "The value does not match the schema type and format for this field."
         },
         {
@@ -5357,7 +5317,7 @@
         },
         {
           "cell": " -   ",
-          "fieldName": "acs_ace_recursos_vinc_2",
+          "fieldName": "parcela_dedutivel_equipe_enfermagem",
           "fieldNumber": 17,
           "fieldPosition": 17,
           "cells": [
@@ -5391,7 +5351,7 @@
             "#cell"
           ],
           "note": "type is \"number/default\"",
-          "message": "Type error in the cell \" -   \" in row \"9\" and field \"acs_ace_recursos_vinc_2\" at position \"17\": type is \"number/default\"",
+          "message": "Type error in the cell \" -   \" in row \"9\" and field \"parcela_dedutivel_equipe_enfermagem\" at position \"17\": type is \"number/default\"",
           "description": "The value does not match the schema type and format for this field."
         },
         {
@@ -6020,7 +5980,7 @@
         },
         {
           "cell": " -   ",
-          "fieldName": "acs_ace_recursos_vinc_2",
+          "fieldName": "parcela_dedutivel_equipe_enfermagem",
           "fieldNumber": 17,
           "fieldPosition": 17,
           "cells": [
@@ -6054,7 +6014,7 @@
             "#cell"
           ],
           "note": "type is \"number/default\"",
-          "message": "Type error in the cell \" -   \" in row \"10\" and field \"acs_ace_recursos_vinc_2\" at position \"17\": type is \"number/default\"",
+          "message": "Type error in the cell \" -   \" in row \"10\" and field \"parcela_dedutivel_equipe_enfermagem\" at position \"17\": type is \"number/default\"",
           "description": "The value does not match the schema type and format for this field."
         },
         {
@@ -6683,7 +6643,7 @@
         },
         {
           "cell": " -   ",
-          "fieldName": "acs_ace_recursos_vinc_2",
+          "fieldName": "parcela_dedutivel_equipe_enfermagem",
           "fieldNumber": 17,
           "fieldPosition": 17,
           "cells": [
@@ -6717,7 +6677,7 @@
             "#cell"
           ],
           "note": "type is \"number/default\"",
-          "message": "Type error in the cell \" -   \" in row \"11\" and field \"acs_ace_recursos_vinc_2\" at position \"17\": type is \"number/default\"",
+          "message": "Type error in the cell \" -   \" in row \"11\" and field \"parcela_dedutivel_equipe_enfermagem\" at position \"17\": type is \"number/default\"",
           "description": "The value does not match the schema type and format for this field."
         },
         {
@@ -7307,7 +7267,7 @@
         },
         {
           "cell": " -   ",
-          "fieldName": "acs_ace_recursos_vinc_2",
+          "fieldName": "parcela_dedutivel_equipe_enfermagem",
           "fieldNumber": 17,
           "fieldPosition": 17,
           "cells": [
@@ -7341,7 +7301,7 @@
             "#cell"
           ],
           "note": "type is \"number/default\"",
-          "message": "Type error in the cell \" -   \" in row \"12\" and field \"acs_ace_recursos_vinc_2\" at position \"17\": type is \"number/default\"",
+          "message": "Type error in the cell \" -   \" in row \"12\" and field \"parcela_dedutivel_equipe_enfermagem\" at position \"17\": type is \"number/default\"",
           "description": "The value does not match the schema type and format for this field."
         },
         {
@@ -7931,7 +7891,7 @@
         },
         {
           "cell": " -   ",
-          "fieldName": "acs_ace_recursos_vinc_2",
+          "fieldName": "parcela_dedutivel_equipe_enfermagem",
           "fieldNumber": 17,
           "fieldPosition": 17,
           "cells": [
@@ -7965,7 +7925,7 @@
             "#cell"
           ],
           "note": "type is \"number/default\"",
-          "message": "Type error in the cell \" -   \" in row \"13\" and field \"acs_ace_recursos_vinc_2\" at position \"17\": type is \"number/default\"",
+          "message": "Type error in the cell \" -   \" in row \"13\" and field \"parcela_dedutivel_equipe_enfermagem\" at position \"17\": type is \"number/default\"",
           "description": "The value does not match the schema type and format for this field."
         },
         {
@@ -8555,7 +8515,7 @@
         },
         {
           "cell": " -   ",
-          "fieldName": "acs_ace_recursos_vinc_2",
+          "fieldName": "parcela_dedutivel_equipe_enfermagem",
           "fieldNumber": 17,
           "fieldPosition": 17,
           "cells": [
@@ -8589,7 +8549,7 @@
             "#cell"
           ],
           "note": "type is \"number/default\"",
-          "message": "Type error in the cell \" -   \" in row \"14\" and field \"acs_ace_recursos_vinc_2\" at position \"17\": type is \"number/default\"",
+          "message": "Type error in the cell \" -   \" in row \"14\" and field \"parcela_dedutivel_equipe_enfermagem\" at position \"17\": type is \"number/default\"",
           "description": "The value does not match the schema type and format for this field."
         },
         {
@@ -9218,7 +9178,7 @@
         },
         {
           "cell": " -   ",
-          "fieldName": "acs_ace_recursos_vinc_2",
+          "fieldName": "parcela_dedutivel_equipe_enfermagem",
           "fieldNumber": 17,
           "fieldPosition": 17,
           "cells": [
@@ -9252,7 +9212,7 @@
             "#cell"
           ],
           "note": "type is \"number/default\"",
-          "message": "Type error in the cell \" -   \" in row \"15\" and field \"acs_ace_recursos_vinc_2\" at position \"17\": type is \"number/default\"",
+          "message": "Type error in the cell \" -   \" in row \"15\" and field \"parcela_dedutivel_equipe_enfermagem\" at position \"17\": type is \"number/default\"",
           "description": "The value does not match the schema type and format for this field."
         },
         {
@@ -9881,7 +9841,7 @@
         },
         {
           "cell": " -   ",
-          "fieldName": "acs_ace_recursos_vinc_2",
+          "fieldName": "parcela_dedutivel_equipe_enfermagem",
           "fieldNumber": 17,
           "fieldPosition": 17,
           "cells": [
@@ -9915,7 +9875,7 @@
             "#cell"
           ],
           "note": "type is \"number/default\"",
-          "message": "Type error in the cell \" -   \" in row \"16\" and field \"acs_ace_recursos_vinc_2\" at position \"17\": type is \"number/default\"",
+          "message": "Type error in the cell \" -   \" in row \"16\" and field \"parcela_dedutivel_equipe_enfermagem\" at position \"17\": type is \"number/default\"",
           "description": "The value does not match the schema type and format for this field."
         },
         {
@@ -10544,7 +10504,7 @@
         },
         {
           "cell": " -   ",
-          "fieldName": "acs_ace_recursos_vinc_2",
+          "fieldName": "parcela_dedutivel_equipe_enfermagem",
           "fieldNumber": 17,
           "fieldPosition": 17,
           "cells": [
@@ -10578,7 +10538,7 @@
             "#cell"
           ],
           "note": "type is \"number/default\"",
-          "message": "Type error in the cell \" -   \" in row \"17\" and field \"acs_ace_recursos_vinc_2\" at position \"17\": type is \"number/default\"",
+          "message": "Type error in the cell \" -   \" in row \"17\" and field \"parcela_dedutivel_equipe_enfermagem\" at position \"17\": type is \"number/default\"",
           "description": "The value does not match the schema type and format for this field."
         },
         {
@@ -11207,7 +11167,7 @@
         },
         {
           "cell": " -   ",
-          "fieldName": "acs_ace_recursos_vinc_2",
+          "fieldName": "parcela_dedutivel_equipe_enfermagem",
           "fieldNumber": 17,
           "fieldPosition": 17,
           "cells": [
@@ -11241,7 +11201,7 @@
             "#cell"
           ],
           "note": "type is \"number/default\"",
-          "message": "Type error in the cell \" -   \" in row \"18\" and field \"acs_ace_recursos_vinc_2\" at position \"17\": type is \"number/default\"",
+          "message": "Type error in the cell \" -   \" in row \"18\" and field \"parcela_dedutivel_equipe_enfermagem\" at position \"17\": type is \"number/default\"",
           "description": "The value does not match the schema type and format for this field."
         },
         {
@@ -11870,7 +11830,7 @@
         },
         {
           "cell": " -   ",
-          "fieldName": "acs_ace_recursos_vinc_2",
+          "fieldName": "parcela_dedutivel_equipe_enfermagem",
           "fieldNumber": 17,
           "fieldPosition": 17,
           "cells": [
@@ -11904,7 +11864,7 @@
             "#cell"
           ],
           "note": "type is \"number/default\"",
-          "message": "Type error in the cell \" -   \" in row \"19\" and field \"acs_ace_recursos_vinc_2\" at position \"17\": type is \"number/default\"",
+          "message": "Type error in the cell \" -   \" in row \"19\" and field \"parcela_dedutivel_equipe_enfermagem\" at position \"17\": type is \"number/default\"",
           "description": "The value does not match the schema type and format for this field."
         },
         {
@@ -12533,7 +12493,7 @@
         },
         {
           "cell": " -   ",
-          "fieldName": "acs_ace_recursos_vinc_2",
+          "fieldName": "parcela_dedutivel_equipe_enfermagem",
           "fieldNumber": 17,
           "fieldPosition": 17,
           "cells": [
@@ -12567,7 +12527,7 @@
             "#cell"
           ],
           "note": "type is \"number/default\"",
-          "message": "Type error in the cell \" -   \" in row \"20\" and field \"acs_ace_recursos_vinc_2\" at position \"17\": type is \"number/default\"",
+          "message": "Type error in the cell \" -   \" in row \"20\" and field \"parcela_dedutivel_equipe_enfermagem\" at position \"17\": type is \"number/default\"",
           "description": "The value does not match the schema type and format for this field."
         },
         {
@@ -13196,7 +13156,7 @@
         },
         {
           "cell": " -   ",
-          "fieldName": "acs_ace_recursos_vinc_2",
+          "fieldName": "parcela_dedutivel_equipe_enfermagem",
           "fieldNumber": 17,
           "fieldPosition": 17,
           "cells": [
@@ -13230,7 +13190,7 @@
             "#cell"
           ],
           "note": "type is \"number/default\"",
-          "message": "Type error in the cell \" -   \" in row \"21\" and field \"acs_ace_recursos_vinc_2\" at position \"17\": type is \"number/default\"",
+          "message": "Type error in the cell \" -   \" in row \"21\" and field \"parcela_dedutivel_equipe_enfermagem\" at position \"17\": type is \"number/default\"",
           "description": "The value does not match the schema type and format for this field."
         },
         {
@@ -13859,7 +13819,7 @@
         },
         {
           "cell": " -   ",
-          "fieldName": "acs_ace_recursos_vinc_2",
+          "fieldName": "parcela_dedutivel_equipe_enfermagem",
           "fieldNumber": 17,
           "fieldPosition": 17,
           "cells": [
@@ -13893,7 +13853,7 @@
             "#cell"
           ],
           "note": "type is \"number/default\"",
-          "message": "Type error in the cell \" -   \" in row \"22\" and field \"acs_ace_recursos_vinc_2\" at position \"17\": type is \"number/default\"",
+          "message": "Type error in the cell \" -   \" in row \"22\" and field \"parcela_dedutivel_equipe_enfermagem\" at position \"17\": type is \"number/default\"",
           "description": "The value does not match the schema type and format for this field."
         },
         {
@@ -14522,7 +14482,7 @@
         },
         {
           "cell": " -   ",
-          "fieldName": "acs_ace_recursos_vinc_2",
+          "fieldName": "parcela_dedutivel_equipe_enfermagem",
           "fieldNumber": 17,
           "fieldPosition": 17,
           "cells": [
@@ -14556,7 +14516,7 @@
             "#cell"
           ],
           "note": "type is \"number/default\"",
-          "message": "Type error in the cell \" -   \" in row \"23\" and field \"acs_ace_recursos_vinc_2\" at position \"17\": type is \"number/default\"",
+          "message": "Type error in the cell \" -   \" in row \"23\" and field \"parcela_dedutivel_equipe_enfermagem\" at position \"17\": type is \"number/default\"",
           "description": "The value does not match the schema type and format for this field."
         },
         {
@@ -15185,7 +15145,7 @@
         },
         {
           "cell": " -   ",
-          "fieldName": "acs_ace_recursos_vinc_2",
+          "fieldName": "parcela_dedutivel_equipe_enfermagem",
           "fieldNumber": 17,
           "fieldPosition": 17,
           "cells": [
@@ -15219,7 +15179,7 @@
             "#cell"
           ],
           "note": "type is \"number/default\"",
-          "message": "Type error in the cell \" -   \" in row \"24\" and field \"acs_ace_recursos_vinc_2\" at position \"17\": type is \"number/default\"",
+          "message": "Type error in the cell \" -   \" in row \"24\" and field \"parcela_dedutivel_equipe_enfermagem\" at position \"17\": type is \"number/default\"",
           "description": "The value does not match the schema type and format for this field."
         },
         {
@@ -15848,7 +15808,7 @@
         },
         {
           "cell": " -   ",
-          "fieldName": "acs_ace_recursos_vinc_2",
+          "fieldName": "parcela_dedutivel_equipe_enfermagem",
           "fieldNumber": 17,
           "fieldPosition": 17,
           "cells": [
@@ -15882,7 +15842,7 @@
             "#cell"
           ],
           "note": "type is \"number/default\"",
-          "message": "Type error in the cell \" -   \" in row \"25\" and field \"acs_ace_recursos_vinc_2\" at position \"17\": type is \"number/default\"",
+          "message": "Type error in the cell \" -   \" in row \"25\" and field \"parcela_dedutivel_equipe_enfermagem\" at position \"17\": type is \"number/default\"",
           "description": "The value does not match the schema type and format for this field."
         },
         {
@@ -16511,7 +16471,7 @@
         },
         {
           "cell": " -   ",
-          "fieldName": "acs_ace_recursos_vinc_2",
+          "fieldName": "parcela_dedutivel_equipe_enfermagem",
           "fieldNumber": 17,
           "fieldPosition": 17,
           "cells": [
@@ -16545,7 +16505,7 @@
             "#cell"
           ],
           "note": "type is \"number/default\"",
-          "message": "Type error in the cell \" -   \" in row \"26\" and field \"acs_ace_recursos_vinc_2\" at position \"17\": type is \"number/default\"",
+          "message": "Type error in the cell \" -   \" in row \"26\" and field \"parcela_dedutivel_equipe_enfermagem\" at position \"17\": type is \"number/default\"",
           "description": "The value does not match the schema type and format for this field."
         },
         {
@@ -17174,7 +17134,7 @@
         },
         {
           "cell": " -   ",
-          "fieldName": "acs_ace_recursos_vinc_2",
+          "fieldName": "parcela_dedutivel_equipe_enfermagem",
           "fieldNumber": 17,
           "fieldPosition": 17,
           "cells": [
@@ -17208,7 +17168,7 @@
             "#cell"
           ],
           "note": "type is \"number/default\"",
-          "message": "Type error in the cell \" -   \" in row \"27\" and field \"acs_ace_recursos_vinc_2\" at position \"17\": type is \"number/default\"",
+          "message": "Type error in the cell \" -   \" in row \"27\" and field \"parcela_dedutivel_equipe_enfermagem\" at position \"17\": type is \"number/default\"",
           "description": "The value does not match the schema type and format for this field."
         },
         {
@@ -17837,7 +17797,7 @@
         },
         {
           "cell": " -   ",
-          "fieldName": "acs_ace_recursos_vinc_2",
+          "fieldName": "parcela_dedutivel_equipe_enfermagem",
           "fieldNumber": 17,
           "fieldPosition": 17,
           "cells": [
@@ -17871,7 +17831,7 @@
             "#cell"
           ],
           "note": "type is \"number/default\"",
-          "message": "Type error in the cell \" -   \" in row \"28\" and field \"acs_ace_recursos_vinc_2\" at position \"17\": type is \"number/default\"",
+          "message": "Type error in the cell \" -   \" in row \"28\" and field \"parcela_dedutivel_equipe_enfermagem\" at position \"17\": type is \"number/default\"",
           "description": "The value does not match the schema type and format for this field."
         },
         {
@@ -18500,7 +18460,7 @@
         },
         {
           "cell": " -   ",
-          "fieldName": "acs_ace_recursos_vinc_2",
+          "fieldName": "parcela_dedutivel_equipe_enfermagem",
           "fieldNumber": 17,
           "fieldPosition": 17,
           "cells": [
@@ -18534,7 +18494,7 @@
             "#cell"
           ],
           "note": "type is \"number/default\"",
-          "message": "Type error in the cell \" -   \" in row \"29\" and field \"acs_ace_recursos_vinc_2\" at position \"17\": type is \"number/default\"",
+          "message": "Type error in the cell \" -   \" in row \"29\" and field \"parcela_dedutivel_equipe_enfermagem\" at position \"17\": type is \"number/default\"",
           "description": "The value does not match the schema type and format for this field."
         },
         {
@@ -19163,7 +19123,7 @@
         },
         {
           "cell": " -   ",
-          "fieldName": "acs_ace_recursos_vinc_2",
+          "fieldName": "parcela_dedutivel_equipe_enfermagem",
           "fieldNumber": 17,
           "fieldPosition": 17,
           "cells": [
@@ -19197,7 +19157,7 @@
             "#cell"
           ],
           "note": "type is \"number/default\"",
-          "message": "Type error in the cell \" -   \" in row \"30\" and field \"acs_ace_recursos_vinc_2\" at position \"17\": type is \"number/default\"",
+          "message": "Type error in the cell \" -   \" in row \"30\" and field \"parcela_dedutivel_equipe_enfermagem\" at position \"17\": type is \"number/default\"",
           "description": "The value does not match the schema type and format for this field."
         },
         {
@@ -19826,7 +19786,7 @@
         },
         {
           "cell": " -   ",
-          "fieldName": "acs_ace_recursos_vinc_2",
+          "fieldName": "parcela_dedutivel_equipe_enfermagem",
           "fieldNumber": 17,
           "fieldPosition": 17,
           "cells": [
@@ -19860,7 +19820,7 @@
             "#cell"
           ],
           "note": "type is \"number/default\"",
-          "message": "Type error in the cell \" -   \" in row \"31\" and field \"acs_ace_recursos_vinc_2\" at position \"17\": type is \"number/default\"",
+          "message": "Type error in the cell \" -   \" in row \"31\" and field \"parcela_dedutivel_equipe_enfermagem\" at position \"17\": type is \"number/default\"",
           "description": "The value does not match the schema type and format for this field."
         },
         {
@@ -20489,7 +20449,7 @@
         },
         {
           "cell": " -   ",
-          "fieldName": "acs_ace_recursos_vinc_2",
+          "fieldName": "parcela_dedutivel_equipe_enfermagem",
           "fieldNumber": 17,
           "fieldPosition": 17,
           "cells": [
@@ -20523,7 +20483,7 @@
             "#cell"
           ],
           "note": "type is \"number/default\"",
-          "message": "Type error in the cell \" -   \" in row \"32\" and field \"acs_ace_recursos_vinc_2\" at position \"17\": type is \"number/default\"",
+          "message": "Type error in the cell \" -   \" in row \"32\" and field \"parcela_dedutivel_equipe_enfermagem\" at position \"17\": type is \"number/default\"",
           "description": "The value does not match the schema type and format for this field."
         },
         {
@@ -21152,7 +21112,7 @@
         },
         {
           "cell": " -   ",
-          "fieldName": "acs_ace_recursos_vinc_2",
+          "fieldName": "parcela_dedutivel_equipe_enfermagem",
           "fieldNumber": 17,
           "fieldPosition": 17,
           "cells": [
@@ -21186,7 +21146,7 @@
             "#cell"
           ],
           "note": "type is \"number/default\"",
-          "message": "Type error in the cell \" -   \" in row \"33\" and field \"acs_ace_recursos_vinc_2\" at position \"17\": type is \"number/default\"",
+          "message": "Type error in the cell \" -   \" in row \"33\" and field \"parcela_dedutivel_equipe_enfermagem\" at position \"17\": type is \"number/default\"",
           "description": "The value does not match the schema type and format for this field."
         },
         {
@@ -21815,7 +21775,7 @@
         },
         {
           "cell": " -   ",
-          "fieldName": "acs_ace_recursos_vinc_2",
+          "fieldName": "parcela_dedutivel_equipe_enfermagem",
           "fieldNumber": 17,
           "fieldPosition": 17,
           "cells": [
@@ -21849,7 +21809,7 @@
             "#cell"
           ],
           "note": "type is \"number/default\"",
-          "message": "Type error in the cell \" -   \" in row \"34\" and field \"acs_ace_recursos_vinc_2\" at position \"17\": type is \"number/default\"",
+          "message": "Type error in the cell \" -   \" in row \"34\" and field \"parcela_dedutivel_equipe_enfermagem\" at position \"17\": type is \"number/default\"",
           "description": "The value does not match the schema type and format for this field."
         },
         {
@@ -22478,7 +22438,7 @@
         },
         {
           "cell": " -   ",
-          "fieldName": "acs_ace_recursos_vinc_2",
+          "fieldName": "parcela_dedutivel_equipe_enfermagem",
           "fieldNumber": 17,
           "fieldPosition": 17,
           "cells": [
@@ -22512,7 +22472,7 @@
             "#cell"
           ],
           "note": "type is \"number/default\"",
-          "message": "Type error in the cell \" -   \" in row \"35\" and field \"acs_ace_recursos_vinc_2\" at position \"17\": type is \"number/default\"",
+          "message": "Type error in the cell \" -   \" in row \"35\" and field \"parcela_dedutivel_equipe_enfermagem\" at position \"17\": type is \"number/default\"",
           "description": "The value does not match the schema type and format for this field."
         },
         {
@@ -23141,7 +23101,7 @@
         },
         {
           "cell": " -   ",
-          "fieldName": "acs_ace_recursos_vinc_2",
+          "fieldName": "parcela_dedutivel_equipe_enfermagem",
           "fieldNumber": 17,
           "fieldPosition": 17,
           "cells": [
@@ -23175,7 +23135,7 @@
             "#cell"
           ],
           "note": "type is \"number/default\"",
-          "message": "Type error in the cell \" -   \" in row \"36\" and field \"acs_ace_recursos_vinc_2\" at position \"17\": type is \"number/default\"",
+          "message": "Type error in the cell \" -   \" in row \"36\" and field \"parcela_dedutivel_equipe_enfermagem\" at position \"17\": type is \"number/default\"",
           "description": "The value does not match the schema type and format for this field."
         },
         {
@@ -23804,7 +23764,7 @@
         },
         {
           "cell": " -   ",
-          "fieldName": "acs_ace_recursos_vinc_2",
+          "fieldName": "parcela_dedutivel_equipe_enfermagem",
           "fieldNumber": 17,
           "fieldPosition": 17,
           "cells": [
@@ -23838,7 +23798,7 @@
             "#cell"
           ],
           "note": "type is \"number/default\"",
-          "message": "Type error in the cell \" -   \" in row \"37\" and field \"acs_ace_recursos_vinc_2\" at position \"17\": type is \"number/default\"",
+          "message": "Type error in the cell \" -   \" in row \"37\" and field \"parcela_dedutivel_equipe_enfermagem\" at position \"17\": type is \"number/default\"",
           "description": "The value does not match the schema type and format for this field."
         },
         {
@@ -31487,7 +31447,7 @@
         }
       ],
       "stats": {
-        "errors": 804
+        "errors": 803
       },
       "valid": false
     },
@@ -31559,7 +31519,7 @@
           "rows": 12
         }
       },
-      "time": 0.017,
+      "time": 0.015,
       "scope": [
         "hash-count-error",
         "byte-count-error",
@@ -35093,7 +35053,7 @@
     }
   ],
   "stats": {
-    "errors": 917,
+    "errors": 916,
     "tasks": 2
   },
   "valid": false
