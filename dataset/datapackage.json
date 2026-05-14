@@ -80,7 +80,7 @@
             "type": "number"
           },
           {
-            "name": "acs_ace_recursos_vinc_2",
+            "name": "parcela_dedutivel_equipe_enfermagem",
             "type": "number"
           },
           {
