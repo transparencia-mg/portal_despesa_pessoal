@@ -1,6 +1,6 @@
 {
   "version": "4.16.6",
-  "time": 0.095,
+  "time": 0.094,
   "errors": [],
   "tasks": [
     {
@@ -97,13 +97,13 @@
         "scheme": "file",
         "title": "Despesa com Pessoal Mensal",
         "stats": {
-          "hash": "95baaf0ac49fb9176d7085e99cb1778a",
-          "bytes": 10708,
+          "hash": "e903226e609c1b7144e97bbae71982c1",
+          "bytes": 10720,
           "fields": 19,
           "rows": 48
         }
       },
-      "time": 0.053,
+      "time": 0.042,
       "scope": [
         "hash-count-error",
         "byte-count-error",
@@ -148,7 +148,7 @@
             "desp_exercicios_ant",
             "inativos_pensionistas_vinc",
             "acs_ace_recursos_vinc",
-            "acs_ace_recursos_vinc_2",
+            "parcela_dedutivel_equipe_enfermagem",
             "outras_deducoes",
             "despesa_liquida_pessoal"
           ],
@@ -188,7 +188,7 @@
             "desp_exercicios_ant",
             "inativos_pensionistas_vinc",
             "acs_ace_recursos_vinc",
-            "acs_ace_recursos_vinc_2",
+            "parcela_dedutivel_equipe_enfermagem",
             "outras_deducoes",
             "despesa_liquida_pessoal"
           ],
@@ -204,6 +204,46 @@
           ],
           "note": "",
           "message": "Label \"outras_despesas_terceirizacoes\" in field outras_despesas_terceirizacao at position \"9\" does not match the field name in the schema",
+          "description": "One of the data source header does not match the field name defined in the schema."
+        },
+        {
+          "label": "parcela_dedutivel_equipe_enfermagem",
+          "fieldName": "acs_ace_recursos_vinc_2",
+          "fieldNumber": 17,
+          "fieldPosition": 17,
+          "labels": [
+            "mes_ano",
+            "despesa_bruta_com_pessoal_i",
+            "pessoal_ativo",
+            "vencimentos_vantagens_e_outras",
+            "obrigacoes_patronais",
+            "pessoal_inativo_e_pensionistas",
+            "aposentadorias_reservas_e_reformas",
+            "pensoes",
+            "outras_despesas_terceirizacoes",
+            "desp_pessoal_nao_exec",
+            "desp_nao_computadas",
+            "indenizacoes_demissao",
+            "decisoes_judiciais_ant",
+            "desp_exercicios_ant",
+            "inativos_pensionistas_vinc",
+            "acs_ace_recursos_vinc",
+            "parcela_dedutivel_equipe_enfermagem",
+            "outras_deducoes",
+            "despesa_liquida_pessoal"
+          ],
+          "rowPositions": [
+            1
+          ],
+          "code": "incorrect-label",
+          "name": "Incorrect Label",
+          "tags": [
+            "#table",
+            "#header",
+            "#label"
+          ],
+          "note": "",
+          "message": "Label \"parcela_dedutivel_equipe_enfermagem\" in field acs_ace_recursos_vinc_2 at position \"17\" does not match the field name in the schema",
           "description": "One of the data source header does not match the field name defined in the schema."
         },
         {
@@ -31447,7 +31487,7 @@
         }
       ],
       "stats": {
-        "errors": 803
+        "errors": 804
       },
       "valid": false
     },
@@ -31519,7 +31559,7 @@
           "rows": 12
         }
       },
-      "time": 0.018,
+      "time": 0.017,
       "scope": [
         "hash-count-error",
         "byte-count-error",
@@ -35053,7 +35093,7 @@
     }
   ],
   "stats": {
-    "errors": 916,
+    "errors": 917,
     "tasks": 2
   },
   "valid": false
